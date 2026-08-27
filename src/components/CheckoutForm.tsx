@@ -22,8 +22,8 @@ export function CheckoutForm({
   const [state, formAction, pending] = useActionState(createBookingAndPay, initial);
 
   useEffect(() => {
-    if (state.status === "success" && state.bookingId) {
-      router.push(`/bookings/${state.bookingId}`);
+    if (state.status === "success" && state.bookingToken) {
+      router.push(`/bookings/${state.bookingToken}`);
     }
   }, [state, router]);
 

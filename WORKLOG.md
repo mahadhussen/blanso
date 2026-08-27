@@ -40,6 +40,17 @@ plattform med betalning, allt lokalt.
 5. Oskyddad `revalidatePath` kunde vända en betald bokning till fel → `safeRevalidate`.
 Plus: CVC valideras numeriskt. Efter fixar: tsc, lint, vitest (26/26), next build gröna.
 
+### Naadir-ronden (slutdom) — 1 blockerande defekt funnen och åtgärdad
+General Naadir dömde NOT CLEAN. Han bekräftade att Heisenbergs 5 fixar höll och
+grindarna var gröna, men fångade en sjätte som både BOB och Heisenberg missade:
+- **D1 (IDOR):** `/bookings/[id]` serverade gäst-PII oautentiserat via gissningsbart id.
+  → Bekräftelsen nås nu bara via en ogenomskinlig 48-teckens `accessToken` (skild från id),
+  `/bookings/[token]`. Verifierat: `/bookings/<id>` → 404, `/bookings/<token>` → 200.
+- Efter-punkter åtgärdade: nya boendens 0-betyg visas som "Ny", tomma amenities döljs,
+  guests > maxGuests stoppas redan på checkout-sidan. Arbetet flyttat till featuregren.
+Timezone (villkor 4): nätter är UTC-normaliserade (kanonisk enhet). Beslut åt Mahad om
+bokningstidszon ska låsas till EAT — inte blockerande.
+
 ### Kända nästa steg (inte blockerande för MVP)
 - Riktig autentisering per värd (nu en delad demokod `blanso`), och gäst-konton.
 - Riktig Stripe-testintegration bakom `PaymentProvider`.

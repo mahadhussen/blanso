@@ -1,5 +1,6 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -25,7 +26,8 @@ function safeRevalidate(path: string) {
 export interface BookingState {
   status: "idle" | "error" | "success";
   error?: string;
-  bookingId?: string;
+  // Ogenomskinlig token, inte databasens id, för bekräftelselänken (skydd mot IDOR).
+  bookingToken?: string;
 }
 
 function slugify(input: string): string {
@@ -75,6 +77,9 @@ export async function createBookingAndPay(
     return { status: "error", error: "Ogiltiga datum. Välj minst en natt." };
   }
 
+  // Stark, ogenomskinlig åtkomsttoken till bekräftelsesidan (skild från id).
+  const accessToken = randomBytes(24).toString("hex");
+
   // Skapa bokningen i en transaktion med tillgänglighetskoll för att undvika
   // dubbelbokning.
   let bookingId: string;
@@ -90,6 +95,7 @@ export async function createBookingAndPay(
       const booking = await tx.booking.create({
         data: {
           propertyId: property.id,
+          accessToken,
           guestName: input.guestName,
           guestEmail: input.guestEmail,
           checkIn: new Date(`${input.checkIn}T00:00:00.000Z`),
@@ -171,7 +177,7 @@ export async function createBookingAndPay(
 
   safeRevalidate(`/rooms/${property.slug}`);
   safeRevalidate("/host/bookings");
-  return { status: "success", bookingId };
+  return { status: "success", bookingToken: accessToken };
 }
 
 export interface ListingState {

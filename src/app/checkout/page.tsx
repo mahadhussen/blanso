@@ -34,6 +34,15 @@ export default async function CheckoutPage({
   const stay = validateStay(checkIn, checkOut);
   if (!stay.ok) return <Problem message={stay.error} href={`/rooms/${property.slug}`} />;
 
+  if (guests > property.maxGuests) {
+    return (
+      <Problem
+        message={`Detta boende tar högst ${property.maxGuests} gäster.`}
+        href={`/rooms/${property.slug}`}
+      />
+    );
+  }
+
   let breakdown;
   try {
     breakdown = priceForDates({

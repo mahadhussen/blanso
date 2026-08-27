@@ -110,19 +110,21 @@ export default async function PropertyPage({
             <p className="mt-2 leading-relaxed text-ink/90">{property.description}</p>
           </div>
 
-          <div className="py-6">
-            <h2 className="text-lg font-semibold text-ink">Bekvämligheter</h2>
-            <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {property.amenities.map((a) => (
-                <li key={a} className="flex items-center gap-2 text-ink/90">
-                  <span className="text-brand" aria-hidden>
-                    ✓
-                  </span>
-                  {a}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {property.amenities.length > 0 && (
+            <div className="py-6">
+              <h2 className="text-lg font-semibold text-ink">Bekvämligheter</h2>
+              <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {property.amenities.map((a) => (
+                  <li key={a} className="flex items-center gap-2 text-ink/90">
+                    <span className="text-brand" aria-hidden>
+                      ✓
+                    </span>
+                    {a}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">

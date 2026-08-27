@@ -10,11 +10,13 @@ export const metadata = { title: "Bokningsbekräftelse" };
 export default async function BookingConfirmationPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ token: string }>;
 }) {
-  const { id } = await params;
+  const { token } = await params;
+  // Slås upp på den ogenomskinliga token, aldrig på databasens id. Utan giltig
+  // token går bokningens uppgifter inte att nå (skydd mot IDOR).
   const booking = await db.booking.findUnique({
-    where: { id },
+    where: { accessToken: token },
     include: { property: true, payment: true },
   });
   if (!booking) notFound();
