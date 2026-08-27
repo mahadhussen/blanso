@@ -1,0 +1,74 @@
+// Blanso — bokningsplattform. Datamodell.
+// Pengar lagras alltid som heltal i minsta enhet (cent). Determinism i pengar.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Property {
+  id                String    @id @default(cuid())
+  slug              String    @unique
+  title             String
+  city              String
+  country           String
+  description       String
+  nightlyPriceCents Int
+  cleaningFeeCents  Int       @default(0)
+  currency          String    @default("USD")
+  maxGuests         Int
+  bedrooms          Int       @default(1)
+  beds              Int       @default(1)
+  baths             Int       @default(1)
+  rating            Float     @default(0)
+  reviewsCount      Int       @default(0)
+  images            String // JSON-array av bild-URL:er
+  amenities         String    @default("[]") // JSON-array
+  hostName          String    @default("Blanso Host")
+  lat               Float?
+  lng               Float?
+  createdAt         DateTime  @default(now())
+  bookings          Booking[]
+
+  @@index([city])
+  @@index([country])
+}
+
+model Booking {
+  id               String   @id @default(cuid())
+  property         Property @relation(fields: [propertyId], references: [id])
+  propertyId       String
+  guestName        String
+  guestEmail       String
+  checkIn          DateTime
+  checkOut         DateTime
+  guests           Int
+  nights           Int
+  subtotalCents    Int
+  cleaningFeeCents Int
+  serviceFeeCents  Int
+  totalCents       Int
+  currency         String   @default("USD")
+  status           String   @default("pending") // pending | confirmed | cancelled
+  payment          Payment?
+  createdAt        DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([status])
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  bookingId   String   @unique
+  provider    String   @default("mock")
+  providerRef String
+  amountCents Int
+  currency    String   @default("USD")
+  status      String   @default("requires_confirmation") // requires_confirmation | succeeded | failed
+  createdAt   DateTime @default(now())
+}

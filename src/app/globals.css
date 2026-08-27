@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+/* Blanso designsystem. Ett ljust, premium tema låst till varumärket:
+   djup teal + varm amber. Ingen auto-invertering, färgerna är konsekventa. */
+
+@theme {
+  --color-brand: #0e6e63;
+  --color-brand-dark: #0a544b;
+  --color-brand-tint: #e7f1ef;
+  --color-accent: #f5a524;
+  --color-ink: #1c2b33;
+  --color-muted: #5b6b72;
+  --color-line: #e6ebec;
+  --color-panel: #f6f8f8;
+  --color-background: #ffffff;
+  --color-foreground: #1c2b33;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  --shadow-card: 0 1px 2px rgba(16, 40, 48, 0.04), 0 6px 20px rgba(16, 40, 48, 0.06);
+  --shadow-pop: 0 12px 40px rgba(16, 40, 48, 0.14);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Diskret fokusring i varumärkesfärg för tillgänglighet. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.blanso-hero-gradient {
+  background: linear-gradient(135deg, #0a544b 0%, #0e6e63 55%, #12867a 100%);
+}
