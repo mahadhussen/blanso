@@ -2,6 +2,7 @@
 // Priser i heltal cent (USD). Bilder via picsum (deterministiska seeds) så inget
 // bildfält någonsin är trasigt. Byt gärna till kuraterad fotografering senare.
 
+import { randomBytes } from "crypto";
 import { PrismaClient } from "@prisma/client";
 import { computePricing } from "../src/lib/pricing";
 
@@ -297,6 +298,7 @@ async function main() {
     const booking = await db.booking.create({
       data: {
         propertyId: zanzibar.id,
+        accessToken: randomBytes(24).toString("hex"),
         guestName: "Yusuf Ali",
         guestEmail: "yusuf@example.com",
         checkIn: new Date(Date.UTC(2026, 8, 10)),

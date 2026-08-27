@@ -41,9 +41,9 @@ model Property {
 model Booking {
   id               String   @id @default(cuid())
   // Ogenomskinlig åtkomsttoken för bekräftelselänken. Skild från id så gästens
-  // PII inte kan nås genom att gissa/räkna upp id (IDOR). Sätts alltid explicit
-  // till ett starkt slumptal i server action; defaulten finns bara för migration.
-  accessToken      String   @unique @default(cuid())
+  // PII inte kan nås genom att gissa/räkna upp id (IDOR). Ingen default: varje
+  // insert MÅSTE sätta en stark slumptoken explicit (randomBytes), annars fel.
+  accessToken      String   @unique
   property         Property @relation(fields: [propertyId], references: [id])
   propertyId       String
   guestName        String

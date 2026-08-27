@@ -34,10 +34,13 @@ yarn-error.log*
 .env*
 !.env.example
 
-# lokal databas (SQLite)
+# lokal databas (SQLite) + säkerhetskopior
 *.db
 *.db-journal
+*.db.bak*
+*.db-*
 /prisma/*.db
+/prisma/*.db.bak*
 
 # vercel
 .vercel
