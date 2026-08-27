@@ -51,6 +51,15 @@ grindarna var gröna, men fångade en sjätte som både BOB och Heisenberg missa
 Timezone (villkor 4): nätter är UTC-normaliserade (kanonisk enhet). Beslut åt Mahad om
 bokningstidszon ska låsas till EAT — inte blockerande.
 
+### BOB:s slutkoll (sett det fungera) — 1 lyckad-väg-bugg
+Vid den avslutande end-to-end-bokningen i webbläsaren fångade BOB något både
+Heisenberg och Naadir missade (de testade komponenter/rutter via curl, inte
+klick→redirect): efter lyckad betalning renderade server-actionen om checkout-
+sidan, som såg datumen nyss bokade och visade "redan bokade" i stället för
+bekräftelsen. Åtgärd: redirecta från server-actionen själv (`redirect()`,
+actions.ts) i stället för från klienten. Verifierat i webbläsaren: betalning →
+"Bokning bekräftad", $344.20, /bookings/[token].
+
 ### Kända nästa steg (inte blockerande för MVP)
 - Riktig autentisering per värd (nu en delad demokod `blanso`), och gäst-konton.
 - Riktig Stripe-testintegration bakom `PaymentProvider`.

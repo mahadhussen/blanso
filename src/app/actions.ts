@@ -177,7 +177,10 @@ export async function createBookingAndPay(
 
   safeRevalidate(`/rooms/${property.slug}`);
   safeRevalidate("/host/bookings");
-  return { status: "success", bookingToken: accessToken };
+  // Redirecta från servern, inte från klienten: annars hinner checkout-sidan
+  // rendera om (och se datumen som nyss bokade = "redan bokade") innan en
+  // klient-redirect kör. redirect() kastar NEXT_REDIRECT och navigerar direkt.
+  redirect(`/bookings/${accessToken}`);
 }
 
 export interface ListingState {

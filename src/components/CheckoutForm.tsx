@@ -1,7 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState } from "react";
 import { createBookingAndPay, type BookingState } from "@/app/actions";
 import { SANDBOX_CARDS } from "@/lib/payments";
 
@@ -18,14 +17,9 @@ export function CheckoutForm({
   checkOut: string;
   guests: number;
 }) {
-  const router = useRouter();
+  // Vid lyckad betalning redirectar server-actionen själv till /bookings/[token];
+  // klienten behöver bara visa fel och pågående-tillstånd.
   const [state, formAction, pending] = useActionState(createBookingAndPay, initial);
-
-  useEffect(() => {
-    if (state.status === "success" && state.bookingToken) {
-      router.push(`/bookings/${state.bookingToken}`);
-    }
-  }, [state, router]);
 
   return (
     <form action={formAction} className="space-y-6">
