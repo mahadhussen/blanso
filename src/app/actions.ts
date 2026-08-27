@@ -24,10 +24,10 @@ function safeRevalidate(path: string) {
 }
 
 export interface BookingState {
-  status: "idle" | "error" | "success";
+  // Lyckad väg redirectar från servern och returnerar aldrig hit, så bara
+  // idle (start) och error förekommer.
+  status: "idle" | "error";
   error?: string;
-  // Ogenomskinlig token, inte databasens id, för bekräftelselänken (skydd mot IDOR).
-  bookingToken?: string;
 }
 
 function slugify(input: string): string {
