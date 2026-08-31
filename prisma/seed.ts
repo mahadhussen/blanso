@@ -3,10 +3,11 @@
 // bildfält någonsin är trasigt. Byt gärna till kuraterad fotografering senare.
 
 import { randomBytes } from "crypto";
-import { PrismaClient } from "@prisma/client";
 import { computePricing } from "../src/lib/pricing";
+import { db } from "../src/lib/db";
 
-const db = new PrismaClient();
+// Använder samma klient-fabrik som appen: sätts TURSO_DATABASE_URL seedas Turso
+// (produktion), annars den lokala fil-databasen.
 
 function img(slug: string, n: number): string {
   return `https://picsum.photos/seed/blanso-${slug}-${n}/1200/800`;

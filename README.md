@@ -29,6 +29,13 @@ npm run db:seed             # 12 östafrikanska boenden
 npm run dev                 # http://localhost:3000
 ```
 
+## Deploya och dela
+
+Blanso är dynamisk (server actions + databas), så den körs inte på GitHub Pages.
+För en delbar live-URL: **Vercel** (kör appen) + **Turso** (serverlös SQLite).
+Appen väljer Turso automatiskt när `TURSO_DATABASE_URL` finns, annars den lokala
+filen — lokalt är inget ändrat. Steg för steg: [DEPLOY.md](DEPLOY.md).
+
 ## Kvalitetsgrindar
 
 ```bash
