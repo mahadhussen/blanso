@@ -17,24 +17,28 @@ Byggd genom Byggkedjan (Byggaren BOB → Heisenberg → General Naadir).
 
 ## Stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Prisma 6 + SQLite.
-Allt kör lokalt utan externa konton.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Prisma 6 + Postgres (Supabase).
 
 ## Kom igång
 
+Blanso använder Postgres. Sätt en Supabase-anslutning i `.env` (se `.env.example`),
+sedan:
+
 ```bash
 npm install
-npx prisma migrate dev      # skapar den lokala SQLite-databasen
-npm run db:seed             # 12 östafrikanska boenden
-npm run dev                 # http://localhost:3000
+cp .env.example .env         # fyll i dina Supabase-strängar
+npx prisma migrate deploy    # skapar tabellerna i din databas
+npm run db:seed              # 12 östafrikanska boenden
+npm run dev                  # http://localhost:3000
 ```
+
+Detaljer och deploy: [DEPLOY.md](DEPLOY.md).
 
 ## Deploya och dela
 
 Blanso är dynamisk (server actions + databas), så den körs inte på GitHub Pages.
-För en delbar live-URL: **Vercel** (kör appen) + **Turso** (serverlös SQLite).
-Appen väljer Turso automatiskt när `TURSO_DATABASE_URL` finns, annars den lokala
-filen — lokalt är inget ändrat. Steg för steg: [DEPLOY.md](DEPLOY.md).
+För en delbar live-URL: **Vercel** (kör appen) + **Supabase** (Postgres, samma
+stack som övriga projekt). Steg för steg: [DEPLOY.md](DEPLOY.md).
 
 ## Kvalitetsgrindar
 

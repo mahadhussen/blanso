@@ -1,6 +1,9 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "public";
+
 -- CreateTable
 CREATE TABLE "Property" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "city" TEXT NOT NULL,
@@ -13,24 +16,27 @@ CREATE TABLE "Property" (
     "bedrooms" INTEGER NOT NULL DEFAULT 1,
     "beds" INTEGER NOT NULL DEFAULT 1,
     "baths" INTEGER NOT NULL DEFAULT 1,
-    "rating" REAL NOT NULL DEFAULT 0,
+    "rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "reviewsCount" INTEGER NOT NULL DEFAULT 0,
     "images" TEXT NOT NULL,
     "amenities" TEXT NOT NULL DEFAULT '[]',
     "hostName" TEXT NOT NULL DEFAULT 'Blanso Host',
-    "lat" REAL,
-    "lng" REAL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "lat" DOUBLE PRECISION,
+    "lng" DOUBLE PRECISION,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Property_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Booking" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
+    "accessToken" TEXT NOT NULL,
     "propertyId" TEXT NOT NULL,
     "guestName" TEXT NOT NULL,
     "guestEmail" TEXT NOT NULL,
-    "checkIn" DATETIME NOT NULL,
-    "checkOut" DATETIME NOT NULL,
+    "checkIn" TIMESTAMP(3) NOT NULL,
+    "checkOut" TIMESTAMP(3) NOT NULL,
     "guests" INTEGER NOT NULL,
     "nights" INTEGER NOT NULL,
     "subtotalCents" INTEGER NOT NULL,
@@ -39,21 +45,23 @@ CREATE TABLE "Booking" (
     "totalCents" INTEGER NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'USD',
     "status" TEXT NOT NULL DEFAULT 'pending',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Booking_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Booking_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Payment" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "bookingId" TEXT NOT NULL,
     "provider" TEXT NOT NULL DEFAULT 'mock',
     "providerRef" TEXT NOT NULL,
     "amountCents" INTEGER NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'USD',
     "status" TEXT NOT NULL DEFAULT 'requires_confirmation',
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Payment_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -66,6 +74,9 @@ CREATE INDEX "Property_city_idx" ON "Property"("city");
 CREATE INDEX "Property_country_idx" ON "Property"("country");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Booking_accessToken_key" ON "Booking"("accessToken");
+
+-- CreateIndex
 CREATE INDEX "Booking_propertyId_idx" ON "Booking"("propertyId");
 
 -- CreateIndex
@@ -73,3 +84,10 @@ CREATE INDEX "Booking_status_idx" ON "Booking"("status");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_bookingId_key" ON "Payment"("bookingId");
+
+-- AddForeignKey
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Payment" ADD CONSTRAINT "Payment_bookingId_fkey" FOREIGN KEY ("bookingId") REFERENCES "Booking"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
