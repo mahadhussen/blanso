@@ -12,33 +12,26 @@ Byggd genom Byggkedjan (Byggaren BOB → Heisenberg → General Naadir).
 - **Boendesidor** med galleri, betyg, bekvämligheter och en levande prisnedbrytning.
 - **Bokningsflöde** hela vägen: välj datum → checkout → betalning → bekräftelse.
 - **Betalning** via en sandbox-motor (Stripe-formad). Inga riktiga pengar rör sig.
-- **Värdpanel**: publicera nya boenden och se alla bokningar med intäkt.
+- **Värdpanel**: kodskyddad vy över boendena (demo — sparar inte nya boenden).
 - **Deterministisk prismotor** (heltal cent) och tillgänglighetslogik, båda facittestade.
 
 ## Stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · Prisma 6 + Postgres (Supabase).
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4. Ingen databas —
+boendedatan är statisk (`src/lib/listings.ts`) och bokningsflödet är tillståndslöst,
+så den deployar gratis var som helst.
 
 ## Kom igång
 
-Blanso använder Postgres. Sätt en Supabase-anslutning i `.env` (se `.env.example`),
-sedan:
-
 ```bash
 npm install
-cp .env.example .env         # fyll i dina Supabase-strängar
-npx prisma migrate deploy    # skapar tabellerna i din databas
-npm run db:seed              # 12 östafrikanska boenden
-npm run dev                  # http://localhost:3000
+npm run dev      # http://localhost:3000
 ```
-
-Detaljer och deploy: [DEPLOY.md](DEPLOY.md).
 
 ## Deploya och dela
 
-Blanso är dynamisk (server actions + databas), så den körs inte på GitHub Pages.
-För en delbar live-URL: **Vercel** (kör appen) + **Supabase** (Postgres, samma
-stack som övriga projekt). Steg för steg: [DEPLOY.md](DEPLOY.md).
+Blanso kör som en delbar demo **utan databas** — deployas gratis på Vercel utan
+konton eller miljövariabler. Steg: [DEPLOY.md](DEPLOY.md).
 
 ## Kvalitetsgrindar
 

@@ -3,11 +3,6 @@ import { SearchBar } from "@/components/SearchBar";
 import { PropertyCard } from "@/components/PropertyCard";
 import { searchProperties, listCities } from "@/lib/queries";
 
-// Hämta listningarna vid varje förfrågan, aldrig vid build. Annars försöker
-// Next prerendera startsidan vid build-tid och kräver en databas som inte finns
-// på Vercel då (bygget dog på "Environment variable not found: DATABASE_URL").
-export const dynamic = "force-dynamic";
-
 export default async function HomePage() {
   const [properties, cities] = await Promise.all([searchProperties(), listCities()]);
   const featured = properties.slice(0, 8);

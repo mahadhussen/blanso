@@ -1,43 +1,20 @@
-// Seed för Blanso — riktiga östafrikanska destinationer.
-// Priser i heltal cent (USD). Bilder via picsum (deterministiska seeds) så inget
-// bildfält någonsin är trasigt. Byt gärna till kuraterad fotografering senare.
+import type { PropertyView } from "./queries";
 
-import { randomBytes } from "crypto";
-import { computePricing } from "../src/lib/pricing";
-import { db } from "../src/lib/db";
+// Statisk boendekatalog. Blanso körs utan databas (delbar demo, gratis på Vercel).
+// Bilder via picsum (deterministiska seeds) så inget bildfält någonsin är trasigt.
 
-// Använder samma klient-fabrik som appen: sätts TURSO_DATABASE_URL seedas Turso
-// (produktion), annars den lokala fil-databasen.
-
-function img(slug: string, n: number): string {
-  return `https://picsum.photos/seed/blanso-${slug}-${n}/1200/800`;
+function images(slug: string, count = 4): string[] {
+  return Array.from(
+    { length: count },
+    (_, i) => `https://picsum.photos/seed/blanso-${slug}-${i + 1}/1200/800`,
+  );
 }
 
-function images(slug: string, count = 4): string {
-  return JSON.stringify(Array.from({ length: count }, (_, i) => img(slug, i + 1)));
-}
-
-interface Seed {
-  slug: string;
-  title: string;
-  city: string;
-  country: string;
-  description: string;
-  nightlyPriceCents: number;
-  cleaningFeeCents: number;
-  maxGuests: number;
-  bedrooms: number;
-  beds: number;
-  baths: number;
-  rating: number;
-  reviewsCount: number;
-  amenities: string[];
-  hostName: string;
-}
+type Seed = Omit<PropertyView, "id" | "images" | "currency"> & { amenities: string[] };
 
 const A = (...a: string[]) => a;
 
-const properties: Seed[] = [
+const seeds: Seed[] = [
   {
     slug: "lido-beach-suite-mogadishu",
     title: "Lido Beach Suite med havsutsikt",
@@ -256,84 +233,15 @@ const properties: Seed[] = [
   },
 ];
 
-async function main() {
-  console.log("Rensar och seedar Blanso...");
-  await db.payment.deleteMany();
-  await db.booking.deleteMany();
-  await db.property.deleteMany();
+// Färdiga PropertyView-objekt. id = slug (stabilt, inget databas-id behövs).
+export const LISTINGS: PropertyView[] = seeds.map((s) => ({
+  ...s,
+  id: s.slug,
+  currency: "USD",
+  images: images(s.slug),
+}));
 
-  for (const p of properties) {
-    await db.property.create({
-      data: {
-        slug: p.slug,
-        title: p.title,
-        city: p.city,
-        country: p.country,
-        description: p.description,
-        nightlyPriceCents: p.nightlyPriceCents,
-        cleaningFeeCents: p.cleaningFeeCents,
-        currency: "USD",
-        maxGuests: p.maxGuests,
-        bedrooms: p.bedrooms,
-        beds: p.beds,
-        baths: p.baths,
-        rating: p.rating,
-        reviewsCount: p.reviewsCount,
-        images: images(p.slug),
-        amenities: JSON.stringify(p.amenities),
-        hostName: p.hostName,
-      },
-    });
-  }
-
-  // En befintlig bekräftad bokning så tillgänglighet syns i UI:t.
-  const zanzibar = await db.property.findUnique({
-    where: { slug: "zanzibar-stonetown-villa" },
-  });
-  if (zanzibar) {
-    const price = computePricing({
-      nightlyPriceCents: zanzibar.nightlyPriceCents,
-      cleaningFeeCents: zanzibar.cleaningFeeCents,
-      nights: 4,
-    });
-    const booking = await db.booking.create({
-      data: {
-        propertyId: zanzibar.id,
-        accessToken: randomBytes(24).toString("hex"),
-        guestName: "Yusuf Ali",
-        guestEmail: "yusuf@example.com",
-        checkIn: new Date(Date.UTC(2026, 8, 10)),
-        checkOut: new Date(Date.UTC(2026, 8, 14)),
-        guests: 2,
-        nights: price.nights,
-        subtotalCents: price.subtotalCents,
-        cleaningFeeCents: price.cleaningFeeCents,
-        serviceFeeCents: price.serviceFeeCents,
-        totalCents: price.totalCents,
-        currency: "USD",
-        status: "confirmed",
-      },
-    });
-    await db.payment.create({
-      data: {
-        bookingId: booking.id,
-        provider: "mock",
-        providerRef: "mock_pi_seeded_demo",
-        amountCents: price.totalCents,
-        currency: "USD",
-        status: "succeeded",
-      },
-    });
-  }
-
-  const count = await db.property.count();
-  console.log(`Klart: ${count} boenden seedade.`);
-}
-
-main()
-  .then(() => db.$disconnect())
-  .catch(async (e) => {
-    console.error(e);
-    await db.$disconnect();
-    process.exit(1);
-  });
+// En förbokad vistelse för att visa tillgänglighetslogiken (Zanzibar).
+export const DEMO_BOOKED: Record<string, { checkIn: string; checkOut: string }[]> = {
+  "zanzibar-stonetown-villa": [{ checkIn: "2026-09-10", checkOut: "2026-09-14" }],
+};
