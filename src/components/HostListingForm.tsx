@@ -1,20 +1,13 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { createListing, type ListingState } from "@/app/actions";
+import { useActionState } from "react";
+import { createListing, type ListingActionState } from "@/app/actions";
 
-const initial: ListingState = { status: "idle" };
+const initial: ListingActionState = { status: "idle" };
 
 export function HostListingForm() {
-  const router = useRouter();
+  // Lyckad väg redirectar från servern till boendesidan.
   const [state, formAction, pending] = useActionState(createListing, initial);
-
-  useEffect(() => {
-    if (state.status === "success" && state.slug) {
-      router.push(`/rooms/${state.slug}`);
-    }
-  }, [state, router]);
 
   return (
     <form action={formAction} className="space-y-5">
@@ -40,7 +33,11 @@ export function HostListingForm() {
         <Field name="beds" label="Sängar" type="number" defaultValue="2" required />
         <Field name="baths" label="Badrum" type="number" defaultValue="1" required />
       </div>
-      <Field name="hostName" label="Värdens namn" placeholder="Amina" required />
+      <Field
+        name="amenities"
+        label="Bekvämligheter (kommaseparerade)"
+        placeholder="Wifi, Kök, Parkering"
+      />
 
       {state.status === "error" && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>
@@ -51,7 +48,7 @@ export function HostListingForm() {
         disabled={pending}
         className="w-full rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
       >
-        {pending ? "Publicerar…" : "Publicera boendet"}
+        {pending ? "Publicerar…" : "Publicera rummet"}
       </button>
     </form>
   );

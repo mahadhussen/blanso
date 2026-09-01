@@ -1,6 +1,4 @@
-import type { PropertyView } from "./queries";
-
-// Statisk boendekatalog. Blanso körs utan databas (delbar demo, gratis på Vercel).
+// Seed-katalog för in-memory-DataStoret: de 12 boenden Blanso startar med.
 // Bilder via picsum (deterministiska seeds) så inget bildfält någonsin är trasigt.
 
 function images(slug: string, count = 4): string[] {
@@ -10,7 +8,23 @@ function images(slug: string, count = 4): string[] {
   );
 }
 
-type Seed = Omit<PropertyView, "id" | "images" | "currency"> & { amenities: string[] };
+interface Seed {
+  slug: string;
+  title: string;
+  city: string;
+  country: string;
+  description: string;
+  nightlyPriceCents: number;
+  cleaningFeeCents: number;
+  maxGuests: number;
+  bedrooms: number;
+  beds: number;
+  baths: number;
+  rating: number;
+  reviewsCount: number;
+  amenities: string[];
+  hostName: string;
+}
 
 const A = (...a: string[]) => a;
 
@@ -233,15 +247,10 @@ const seeds: Seed[] = [
   },
 ];
 
-// Färdiga PropertyView-objekt. id = slug (stabilt, inget databas-id behövs).
-export const LISTINGS: PropertyView[] = seeds.map((s) => ({
+// Seed-objekt till DataStoret. id = slug (stabilt, läsbart).
+export const LISTINGS = seeds.map((s) => ({
   ...s,
   id: s.slug,
   currency: "USD",
   images: images(s.slug),
 }));
-
-// En förbokad vistelse för att visa tillgänglighetslogiken (Zanzibar).
-export const DEMO_BOOKED: Record<string, { checkIn: string; checkOut: string }[]> = {
-  "zanzibar-stonetown-villa": [{ checkIn: "2026-09-10", checkOut: "2026-09-14" }],
-};

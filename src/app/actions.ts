@@ -3,24 +3,23 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { priceForDates } from "@/lib/pricing";
-import { isAvailable } from "@/lib/availability";
 import { getPaymentProvider } from "@/lib/payments";
-import { bookingSchema } from "@/lib/validation";
-import { getPropertyById, getBookedRanges } from "@/lib/queries";
+import { bookingSchema, listingSchema } from "@/lib/validation";
 import { validateStay } from "@/lib/dates";
-import { HOST_COOKIE, hostPasscode } from "@/lib/hostAuth";
+import { getStore } from "@/lib/store";
+import { DEMO_HOST_ID } from "@/lib/store/memory";
+import { HOST_COOKIE, hostPasscode, isHostAuthed } from "@/lib/hostAuth";
 
 export interface BookingState {
-  // Lyckad väg redirectar från servern och returnerar aldrig hit, så bara
-  // idle (start) och error förekommer.
+  // Lyckad väg redirectar från servern och returnerar aldrig hit.
   status: "idle" | "error";
   error?: string;
 }
 
-// Skapar en bokning och tar betalt via sandbox-betalmotorn. Demoläge: bokningen
-// sparas inte i någon databas — priset räknas om på servern (aldrig från
-// klienten) och gästen skickas till en bekräftelse byggd ur boende + datum.
-// Kortdata sparas aldrig, den skickas bara till betalleverantören.
+// Skapar en bokning: auktoritativt pris ur den deterministiska motorn,
+// sandbox-betalning, atomisk skrivning i DataStore (tillgänglighetskoll och
+// insättning i ett steg — dubbelbokning kan inte smyga emellan). Kortdata
+// sparas aldrig.
 export async function createBookingAndPay(
   _prev: BookingState,
   formData: FormData,
@@ -30,23 +29,23 @@ export async function createBookingAndPay(
     return { status: "error", error: parsed.error.issues[0]?.message ?? "Ogiltiga uppgifter" };
   }
   const input = parsed.data;
+  const store = getStore();
 
-  const property = await getPropertyById(input.propertyId);
-  if (!property) return { status: "error", error: "Boendet hittades inte." };
-
-  if (input.guests > property.maxGuests) {
-    return { status: "error", error: `Max ${property.maxGuests} gäster för detta boende.` };
+  const listing = await store.getListingById(input.propertyId);
+  if (!listing || listing.status !== "published") {
+    return { status: "error", error: "Boendet hittades inte." };
   }
-
+  if (input.guests > listing.maxGuests) {
+    return { status: "error", error: `Max ${listing.maxGuests} gäster för detta boende.` };
+  }
   const stay = validateStay(input.checkIn, input.checkOut);
   if (!stay.ok) return { status: "error", error: stay.error };
 
-  // Auktoritativt pris ur den deterministiska motorn.
   let price;
   try {
     price = priceForDates({
-      nightlyPriceCents: property.nightlyPriceCents,
-      cleaningFeeCents: property.cleaningFeeCents,
+      nightlyPriceCents: listing.nightlyPriceCents,
+      cleaningFeeCents: listing.cleaningFeeCents,
       checkIn: input.checkIn,
       checkOut: input.checkOut,
     });
@@ -54,24 +53,19 @@ export async function createBookingAndPay(
     return { status: "error", error: "Ogiltiga datum. Välj minst en natt." };
   }
 
-  const booked = await getBookedRanges(property.id);
-  if (!isAvailable({ checkIn: input.checkIn, checkOut: input.checkOut }, booked)) {
-    return { status: "error", error: "De valda datumen är tyvärr redan bokade." };
-  }
-
-  // Betalning via sandbox-leverantören.
+  // Betalning FÖRE skrivning: ingen bokning utan lyckad betalning.
   const provider = getPaymentProvider();
-  let succeeded = false;
+  let paymentRef = "";
   try {
     const intent = await provider.createPaymentIntent({
       amountCents: price.totalCents,
-      currency: property.currency,
-      bookingId: property.id,
+      currency: listing.currency,
+      bookingId: listing.id,
     });
     const confirmation = await provider.confirmPaymentIntent({
       intentId: intent.id,
       amountCents: price.totalCents,
-      currency: property.currency,
+      currency: listing.currency,
       card: {
         number: input.cardNumber,
         expMonth: input.cardExpMonth,
@@ -80,43 +74,165 @@ export async function createBookingAndPay(
         name: input.cardName,
       },
     });
-    succeeded = confirmation.status === "succeeded";
+    if (confirmation.status === "succeeded") paymentRef = confirmation.id;
   } catch {
-    succeeded = false;
+    paymentRef = "";
   }
-
-  if (!succeeded) {
+  if (!paymentRef) {
     return {
       status: "error",
       error: "Betalningen nekades. Använd sandbox-kortet 4242 4242 4242 4242 för att lyckas.",
     };
   }
 
-  // Bekräftelsen byggs ur boende + datum (inga personuppgifter i URL:en).
-  const params = new URLSearchParams({
-    slug: property.slug,
+  const result = await store.createBooking({
+    listingId: listing.id,
+    guestName: input.guestName,
+    guestEmail: input.guestEmail,
     checkIn: input.checkIn,
     checkOut: input.checkOut,
-    guests: String(input.guests),
+    guests: input.guests,
+    nights: price.nights,
+    subtotalCents: price.subtotalCents,
+    cleaningFeeCents: price.cleaningFeeCents,
+    serviceFeeCents: price.serviceFeeCents,
+    totalCents: price.totalCents,
+    currency: listing.currency,
+    paymentRef,
   });
-  redirect(`/bookings/confirm?${params.toString()}`);
+
+  if (!result.ok || !result.booking) {
+    return {
+      status: "error",
+      error:
+        result.error === "UNAVAILABLE"
+          ? "De valda datumen är tyvärr redan bokade."
+          : "Kunde inte skapa bokningen. Försök igen.",
+    };
+  }
+
+  redirect(`/bookings/${result.booking.accessToken}`);
 }
 
-export interface ListingState {
+// ---- Värdflödet -------------------------------------------------------------
+
+async function requireHost(): Promise<string | null> {
+  return (await isHostAuthed()) ? DEMO_HOST_ID : null;
+}
+
+export interface ListingActionState {
   status: "idle" | "error" | "success";
   error?: string;
   slug?: string;
 }
 
-// Demoläge: nya boenden kan inte sparas utan databas. Signaturen tar inga
-// argument — en funktion med färre parametrar är kompatibel med useActionState.
-export async function createListing(): Promise<ListingState> {
-  return {
-    status: "error",
-    error:
-      "Demon sparar inte nya boenden (kör utan databas). Den fullständiga versionen med databas gör det.",
-  };
+export async function createListing(
+  _prev: ListingActionState,
+  formData: FormData,
+): Promise<ListingActionState> {
+  const hostId = await requireHost();
+  if (!hostId) return { status: "error", error: "Logga in som värd innan du publicerar." };
+
+  const parsed = listingSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { status: "error", error: parsed.error.issues[0]?.message ?? "Ogiltiga uppgifter" };
+  }
+  const d = parsed.data;
+  const store = getStore();
+  const host = await store.getHostById(hostId);
+
+  const listing = await store.createListing(hostId, {
+    hostId,
+    hostName: host?.name ?? "Värd",
+    title: d.title,
+    city: d.city,
+    country: d.country,
+    description: d.description,
+    nightlyPriceCents: Math.round(d.nightlyPrice * 100),
+    cleaningFeeCents: Math.round(d.cleaningFee * 100),
+    currency: "USD",
+    maxGuests: d.maxGuests,
+    bedrooms: d.bedrooms,
+    beds: d.beds,
+    baths: d.baths,
+    images: [],
+    amenities: d.amenities
+      ? d.amenities.split(",").map((a) => a.trim()).filter(Boolean)
+      : [],
+  });
+
+  // Deterministiska platshållarbilder tills värden laddar upp egna.
+  await store.updateListing(listing.id, hostId, {
+    images: Array.from(
+      { length: 4 },
+      (_, i) => `https://picsum.photos/seed/blanso-${listing.slug}-${i + 1}/1200/800`,
+    ),
+  });
+  // Publicera direkt — utkast-läget finns för framtida redigeringsflöde.
+  await store.setListingStatus(listing.id, hostId, "published");
+
+  redirect(`/rooms/${listing.slug}`);
 }
+
+export async function unpublishListing(formData: FormData): Promise<void> {
+  const hostId = await requireHost();
+  if (!hostId) return;
+  const id = String(formData.get("listingId") ?? "");
+  await getStore().setListingStatus(id, hostId, "unlisted");
+  redirect("/host");
+}
+
+export async function publishListing(formData: FormData): Promise<void> {
+  const hostId = await requireHost();
+  if (!hostId) return;
+  const id = String(formData.get("listingId") ?? "");
+  await getStore().setListingStatus(id, hostId, "published");
+  redirect("/host");
+}
+
+export interface BlockState {
+  status: "idle" | "error";
+  error?: string;
+}
+
+export async function addBlock(_prev: BlockState, formData: FormData): Promise<BlockState> {
+  const hostId = await requireHost();
+  if (!hostId) return { status: "error", error: "Logga in som värd." };
+  const listingId = String(formData.get("listingId") ?? "");
+  const checkIn = String(formData.get("checkIn") ?? "");
+  const checkOut = String(formData.get("checkOut") ?? "");
+  const note = String(formData.get("note") ?? "").trim() || undefined;
+
+  const stay = validateStay(checkIn, checkOut);
+  if (!stay.ok) return { status: "error", error: stay.error };
+
+  const created = await getStore().addAvailabilityBlock(listingId, hostId, {
+    checkIn,
+    checkOut,
+    note,
+  });
+  if (!created) return { status: "error", error: "Kunde inte blockera datumen." };
+  redirect(`/host/listings/${listingId}`);
+}
+
+export async function removeBlock(formData: FormData): Promise<void> {
+  const hostId = await requireHost();
+  if (!hostId) return;
+  const id = String(formData.get("blockId") ?? "");
+  const listingId = String(formData.get("listingId") ?? "");
+  await getStore().removeAvailabilityBlock(id, hostId);
+  redirect(`/host/listings/${listingId}`);
+}
+
+export async function cancelBookingAction(formData: FormData): Promise<void> {
+  const hostId = await requireHost();
+  if (!hostId) return;
+  const id = String(formData.get("bookingId") ?? "");
+  await getStore().cancelBooking(id, hostId);
+  redirect("/host/bookings");
+}
+
+// ---- Värdinloggning ---------------------------------------------------------
 
 export interface HostLoginState {
   status: "idle" | "error";
@@ -141,7 +257,7 @@ export async function loginHost(
   redirect("/host");
 }
 
-export async function logoutHost() {
+export async function logoutHost(): Promise<void> {
   const store = await cookies();
   store.delete(HOST_COOKIE);
   redirect("/host/login");

@@ -27,7 +27,7 @@ export const listingSchema = z.object({
   bedrooms: z.coerce.number().int().min(0).max(20),
   beds: z.coerce.number().int().min(1).max(40),
   baths: z.coerce.number().int().min(1).max(20),
-  hostName: z.string().trim().min(2, "Ange värdens namn"),
+  amenities: z.string().optional(),
 });
 
 export type ListingInput = z.infer<typeof listingSchema>;
