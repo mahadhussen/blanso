@@ -6,7 +6,7 @@ export function SiteFooter() {
           Mogadishu · Hargeisa · Nairobi · Addis Abeba · Zanzibar · Kigali
         </p>
         <p className="b-label">
-          © {new Date().getFullYear()} Blanso · Demo — sandbox-betalning
+          © {new Date().getFullYear()} Balaanso · Demo — sandbox-betalning
         </p>
       </div>
     </footer>

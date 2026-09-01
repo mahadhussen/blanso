@@ -26,8 +26,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Blanso — Boende i Östafrika",
-    template: "%s · Blanso",
+    default: "Balaanso — Boende i Östafrika",
+    template: "%s · Balaanso",
   },
   description:
     "Boka boende i Somalia, Kenya, Etiopien, Tanzania och resten av Östafrika. Trygg bokning, tydliga priser.",

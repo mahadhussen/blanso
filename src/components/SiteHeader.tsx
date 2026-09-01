@@ -1,22 +1,13 @@
 import Link from "next/link";
+import { BalaansoLogo } from "./BalaansoLogo";
 
-// Header 72px, hairline undertill. Ordmärket BLANSO i Cormorant, ls 6px.
+// Header 84px, hairline undertill, B-märke + "alaanso" (facit four-seasons).
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-background">
-      <div className="b-page flex h-[72px] items-center justify-between">
-        <Link
-          href="/"
-          aria-label="Blanso, till startsidan"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: 28,
-            letterSpacing: 6,
-            textTransform: "uppercase",
-            fontWeight: 400,
-          }}
-        >
-          Blanso
+      <div className="b-page flex h-[84px] items-center justify-between">
+        <Link href="/" aria-label="Balaanso, till startsidan">
+          <BalaansoLogo />
         </Link>
         <nav className="flex items-center gap-8">
           <Link href="/s" className="b-label b-label-ink">

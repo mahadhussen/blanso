@@ -1,22 +1,38 @@
 import Link from "next/link";
 import Image from "next/image";
 import { SearchBar } from "@/components/SearchBar";
-import { PropertyCard } from "@/components/PropertyCard";
+import { LandingStays } from "@/components/LandingStays";
+import { EastAfricaMap } from "@/components/EastAfricaMap";
 import { searchProperties } from "@/lib/queries";
+import { formatPriceShort } from "@/lib/money";
 
-// Hämta listningarna vid varje förfrågan, aldrig vid build (databas krävs ej
-// vid build-tid på Vercel).
+// Hämta listningarna vid varje förfrågan, aldrig vid build.
 export const dynamic = "force-dynamic";
 
 const HERO_IMAGE = "https://picsum.photos/seed/blanso-hero-lido/2000/1100";
 
 export default async function HomePage() {
   const properties = await searchProperties();
-  const featured = properties.slice(0, 6);
+  const stays = properties.slice(0, 8).map((p) => ({
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    city: p.city,
+    country: p.country,
+    nightlyPriceCents: p.nightlyPriceCents,
+    currency: p.currency,
+    images: p.images,
+  }));
+  const mapStays = properties.map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    city: p.city,
+    priceLabel: formatPriceShort(p.nightlyPriceCents, p.currency),
+  }));
 
   return (
     <div>
-      {/* Hero: fullbreddsfoto 560px med scrim, display-rubrik i nederkant. */}
+      {/* Hero: fullbreddsfoto med scrim, display-rubrik, sökrad i nederkant. */}
       <section className="relative" style={{ height: 560 }}>
         <Image
           src={HERO_IMAGE}
@@ -27,7 +43,7 @@ export default async function HomePage() {
           style={{ objectFit: "cover" }}
         />
         <div className="absolute inset-0" style={{ background: "var(--scrim)" }} />
-        <div className="b-page absolute inset-x-0 bottom-0 pb-12">
+        <div className="b-page absolute inset-x-0 bottom-0 pb-10">
           <p className="b-label b-rise" style={{ color: "rgba(255,255,255,.85)" }}>
             Östafrika · Somalia · Kenya · Tanzania
           </p>
@@ -37,25 +53,19 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Sökrad */}
-      <section className="b-page" style={{ marginTop: "var(--s-6)" }}>
+      {/* Sökraden direkt under heron, indragen över kanten. */}
+      <section className="b-page" style={{ marginTop: -32, position: "relative", zIndex: 10 }}>
         <SearchBar />
       </section>
 
-      {/* Utvalda boenden */}
+      {/* Boenden: 8 kort, karuseller, hjärtan, 3/6/8-väljare. */}
       <section className="b-page" style={{ marginTop: "var(--s-8)" }}>
         <div className="text-center">
           <p className="b-label">Utvalda boenden</p>
           <h2 className="b-h2 mt-2">Från Lido Beach till Stone Town</h2>
         </div>
-        <div
-          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          {featured.map((p, i) => (
-            <div key={p.id} className={i < 3 ? `b-rise-${Math.min(i + 1, 3)}`.replace("b-rise-1", "b-rise") : undefined}>
-              <PropertyCard property={p} />
-            </div>
-          ))}
+        <div className="mt-10">
+          <LandingStays stays={stays} />
         </div>
         <div className="mt-16 text-center">
           <Link href="/s" className="b-btn">
@@ -73,7 +83,7 @@ export default async function HomePage() {
           <p className="b-label">För värdar</p>
           <h2 className="b-h2 mt-2">Har du ett ledigt rum?</h2>
           <p className="b-lead mx-auto mt-4" style={{ maxWidth: "52ch" }}>
-            Lägg upp ditt boende på Blanso och nå resenärer i hela Östafrika.
+            Lägg upp ditt boende på Balaanso och nå resenärer i hela Östafrika.
             Du bestämmer pris, datum och regler — vi sköter bokningen.
           </p>
           <div className="mt-8">
@@ -81,6 +91,17 @@ export default async function HomePage() {
               Bli värd
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Karta över Östafrika med boende-popups */}
+      <section className="b-page" style={{ marginTop: "var(--s-8)" }}>
+        <div className="text-center">
+          <p className="b-label">Kartan</p>
+          <h2 className="b-h2 mt-2">Hela Östafrika, ett bokningsflöde</h2>
+        </div>
+        <div className="mt-10">
+          <EastAfricaMap stays={mapStays} />
         </div>
       </section>
     </div>
