@@ -180,7 +180,7 @@ function FilterGroup({ title, children }: { title: string; children: React.React
 
 function FilterRow({ href, active, label }: { href: string; active: boolean; label: string }) {
   return (
-    <Link href={href} className="flex items-center gap-3" aria-pressed={active}>
+    <Link href={href} className="flex items-center gap-3" aria-current={active ? "true" : undefined}>
       <span
         aria-hidden
         style={{

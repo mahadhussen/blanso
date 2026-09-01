@@ -1,5 +1,35 @@
 # WORKLOG — Blanso
 
+## 2026-09-01 — Supabase + designfacit (skiva 3)
+Balaanso (Supabase EU) inkopplad bakom DataStore: schema + atomisk create_booking
+i SQL, RLS deny-all, 17/17 kontraktschecks mot riktiga db (20 samtidiga → 1 vinnare).
+Hela gästflödet omklätt till designfacit (ink-monokrom serif). E2E: BLN-bokning
+i webbläsare, rad verifierad i Balaanso.
+
+### Facitavvikelser (alla medvetna, Heisenberg-dömda)
+1. Svenska UI (facit kräver det). 2. Serviceavgift 8 % i motorn. 3. EVC Plus·Zaad
++ Betala på plats visas men "kommer snart" — inga fejkade pengaflöden. 4. Inga
+rumsrader (domänen: en bokningsbar enhet per listning). 5. Ingen karta (platshållare
+även i facit). 6. Läget-sektionens nyckelavstånd utelämnade (ingen sådan data i
+domänen). 7. Recensionscitat utelämnade (påhittade citat = fabricerat innehåll;
+betyg/antal visas). 8. Typ-filtret utelämnat (ingen typ-dimension i domänen;
+pris + faciliteter är verkliga filter). 9. BLN-nummer använder bokningens unika
+id som suffix i stället för facits NNNNN — unikhet slår format på ett kvitto.
+
+### Heisenberg-rond skiva 3 (4 BLOCK åtgärdade)
+Fotogriden fylld (4 bilder, .b-photo-wide), BLN-nummer unikt (id-baserat),
+feluppslukning stängd i 9 SupabaseStore-metoder (transportfel kastar, maskeras
+aldrig som not-found/ej-ägare), produktionsvakt i getStore (BLANSO_DEMO=1 krävs
+för RAM i produktion). Efter-punkter gjorda: aria-current, seed ignoreDuplicates.
+
+### Kvarvarande efterarbete (Heisenberg EFTER, ej blockerande)
+- Atomisera addAvailabilityBlock i SQL (lås + överlappskoll mot bokningar) + test.
+- Härda verify-supabase.mts: try/finally-städning + 5 otestade fall
+  (removeAvailabilityBlock, updateListing främmande värd, rygg-i-rygg mot SQL,
+  block-över-bokning, getBookingByToken fel token).
+- MÄNNISKA: sätt BLANSO_HOST_PASSCODE i produktion; tidplan per-värd-inloggning.
+- Okulär rond 375/768/1440.
+
 NEEDS-DECISION: Värdinloggningen är en delad demokod (`blanso`). Ägarskyddet i
 DataStore är byggt och testat per hostId, men innan en ANDRA riktig värd någonsin
 släpps in måste per-värd-inloggning byggas (kommer naturligt med Supabase Auth).

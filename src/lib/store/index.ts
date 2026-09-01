@@ -11,7 +11,17 @@ export function getStore(): DataStore {
   if (!store) {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    store = url && key ? new SupabaseStore(url, key) : new MemoryStore();
+    if (url && key) {
+      store = new SupabaseStore(url, key);
+    } else if (process.env.NODE_ENV === "production" && process.env.BLANSO_DEMO !== "1") {
+      // Felkonfiguration får ALDRIG tyst bli RAM i produktion: bokningar skulle
+      // tas emot och försvinna. Demoläge är opt-in via BLANSO_DEMO=1.
+      throw new Error(
+        "Blanso i produktion utan databas: sätt SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY, eller BLANSO_DEMO=1 för uttryckligt demoläge.",
+      );
+    } else {
+      store = new MemoryStore();
+    }
   }
   return store;
 }

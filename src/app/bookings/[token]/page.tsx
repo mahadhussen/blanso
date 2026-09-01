@@ -7,11 +7,12 @@ import { formatMoney } from "@/lib/money";
 export const metadata = { title: "Bokningsbekräftelse" };
 export const dynamic = "force-dynamic";
 
-// Visningsformat enligt facit: BLN-ÅÅÅÅ-NNNNN (härledd ur bokningen, id är sanningen).
+// Bokningsnummer BLN-ÅÅÅÅ-XXXXXXXXXXX: suffixet ÄR bokningens unika id (hex),
+// alltså garanterat unikt — aldrig en härledd summa med kollisionsrymd.
+// Avvikelse från facits femsiffriga NNNNN, loggad: unikhet slår format på ett kvitto.
 function displayNumber(id: string, createdAt: string): string {
   const year = new Date(createdAt).getUTCFullYear();
-  const digits = Array.from(id.replace("bok_", "")).reduce((a, c) => a + c.charCodeAt(0), 0);
-  return `BLN-${year}-${String(10000 + (digits % 90000))}`;
+  return `BLN-${year}-${id.replace("bok_", "").replace(/-/g, "").toUpperCase()}`;
 }
 
 export default async function BookingConfirmationPage({

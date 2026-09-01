@@ -128,7 +128,8 @@ export class SupabaseStore implements DataStore {
   }
 
   async getHostById(id: string): Promise<Host | null> {
-    const { data } = await this.client.from("hosts").select("*").eq("id", id).maybeSingle();
+    const { data, error } = await this.client.from("hosts").select("*").eq("id", id).maybeSingle();
+    if (error) throw new Error(`getHostById: ${error.message}`);
     if (!data) return null;
     return { id: s(data.id), name: s(data.name), email: s(data.email), createdAt: iso(data.created_at) };
   }
@@ -155,12 +156,14 @@ export class SupabaseStore implements DataStore {
   }
 
   async getListingBySlug(slug: string): Promise<Listing | null> {
-    const { data } = await this.client.from("listings").select("*").eq("slug", slug).maybeSingle();
+    const { data, error } = await this.client.from("listings").select("*").eq("slug", slug).maybeSingle();
+    if (error) throw new Error(`getListingBySlug: ${error.message}`);
     return data ? toListing(data) : null;
   }
 
   async getListingById(id: string): Promise<Listing | null> {
-    const { data } = await this.client.from("listings").select("*").eq("id", id).maybeSingle();
+    const { data, error } = await this.client.from("listings").select("*").eq("id", id).maybeSingle();
+    if (error) throw new Error(`getListingById: ${error.message}`);
     return data ? toListing(data) : null;
   }
 
@@ -206,13 +209,14 @@ export class SupabaseStore implements DataStore {
   ): Promise<Listing | null> {
     const row = listingPatchToRow(patch);
     row.updated_at = new Date().toISOString();
-    const { data } = await this.client
+    const { data, error } = await this.client
       .from("listings")
       .update(row)
       .eq("id", id)
       .eq("host_id", hostId)
       .select("*")
       .maybeSingle();
+    if (error) throw new Error(`updateListing: ${error.message}`);
     return data ? toListing(data) : null;
   }
 
@@ -221,13 +225,14 @@ export class SupabaseStore implements DataStore {
     hostId: string,
     status: Listing["status"],
   ): Promise<Listing | null> {
-    const { data } = await this.client
+    const { data, error } = await this.client
       .from("listings")
       .update({ status, updated_at: new Date().toISOString() })
       .eq("id", id)
       .eq("host_id", hostId)
       .select("*")
       .maybeSingle();
+    if (error) throw new Error(`setListingStatus: ${error.message}`);
     return data ? toListing(data) : null;
   }
 
@@ -280,7 +285,8 @@ export class SupabaseStore implements DataStore {
       })
       .select("*")
       .single();
-    if (error || !data) return null;
+    if (error) throw new Error(`addAvailabilityBlock: ${error.message}`);
+    if (!data) return null;
     return {
       id: s(data.id),
       listingId: s(data.listing_id),
@@ -292,16 +298,18 @@ export class SupabaseStore implements DataStore {
   }
 
   async removeAvailabilityBlock(id: string, hostId: string): Promise<boolean> {
-    const { data: blk } = await this.client
+    const { data: blk, error: readErr } = await this.client
       .from("availability_blocks")
       .select("id, listing_id")
       .eq("id", id)
       .maybeSingle();
+    if (readErr) throw new Error(`removeAvailabilityBlock: ${readErr.message}`);
     if (!blk) return false;
     const listing = await this.getListingById(s(blk.listing_id));
     if (!listing || listing.hostId !== hostId) return false;
     const { error } = await this.client.from("availability_blocks").delete().eq("id", id);
-    return !error;
+    if (error) throw new Error(`removeAvailabilityBlock: ${error.message}`);
+    return true;
   }
 
   async createBooking(
@@ -331,11 +339,12 @@ export class SupabaseStore implements DataStore {
   }
 
   async getBookingByToken(token: string): Promise<Booking | null> {
-    const { data } = await this.client
+    const { data, error } = await this.client
       .from("bookings")
       .select("*")
       .eq("access_token", token)
       .maybeSingle();
+    if (error) throw new Error(`getBookingByToken: ${error.message}`);
     return data ? toBooking(data) : null;
   }
 
@@ -355,11 +364,12 @@ export class SupabaseStore implements DataStore {
   }
 
   async cancelBooking(id: string, hostId: string): Promise<boolean> {
-    const { data: b } = await this.client
+    const { data: b, error: readErr } = await this.client
       .from("bookings")
       .select("id, status, listing_id")
       .eq("id", id)
       .maybeSingle();
+    if (readErr) throw new Error(`cancelBooking: ${readErr.message}`);
     if (!b) return false;
     const listing = await this.getListingById(s(b.listing_id));
     if (!listing || listing.hostId !== hostId) return false;
@@ -368,6 +378,7 @@ export class SupabaseStore implements DataStore {
       .from("bookings")
       .update({ status: "cancelled" })
       .eq("id", id);
-    return !error;
+    if (error) throw new Error(`cancelBooking: ${error.message}`);
+    return true;
   }
 }

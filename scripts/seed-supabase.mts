@@ -43,7 +43,11 @@ const rows = LISTINGS.map((l) => ({
   amenities: l.amenities,
 }));
 
-const { error } = await client.from("listings").upsert(rows, { onConflict: "slug" });
+// ignoreDuplicates: en omsådd får ALDRIG skriva över en värds ändringar
+// (t.ex. återpublicera en avpublicerad listning) — bara lägga till nya rader.
+const { error } = await client
+  .from("listings")
+  .upsert(rows, { onConflict: "slug", ignoreDuplicates: true });
 if (error) {
   console.error("Seed misslyckades:", error.message);
   process.exit(1);

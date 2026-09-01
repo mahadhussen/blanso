@@ -207,7 +207,13 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
 /* Fotogrid på boendesidan: 2fr 1fr 1fr, huvudbilden spänner två rader */
 .b-photo-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-auto-rows: 280px; gap: 8px; }
 .b-photo-main { grid-row: span 2; }
-@media (max-width: 760px) { .b-photo-grid { grid-template-columns: 1fr; grid-auto-rows: 240px; } .b-photo-main { grid-row: span 1; } }
+/* Fjärde bilden fyller andra radens två högerceller — griden lämnar aldrig hål. */
+.b-photo-wide { grid-column: 2 / 4; }
+@media (max-width: 760px) {
+  .b-photo-grid { grid-template-columns: 1fr; grid-auto-rows: 240px; }
+  .b-photo-main { grid-row: span 1; }
+  .b-photo-wide { grid-column: auto; }
+}
 
 /* Sökrad: 1px svart ram, celler skiljda av hairlines */
 .b-searchbar { display: grid; grid-template-columns: 1.4fr 1fr 1fr 0.7fr auto; border: 1px solid var(--ink); background: var(--paper); }

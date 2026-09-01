@@ -49,7 +49,9 @@ export default async function PropertyPage({
     guests: guestsRaw ? Math.max(1, parseInt(guestsRaw, 10) || 1) : 1,
   };
 
-  const photos = property.images.slice(0, 3);
+  // Alla fyra bilder fyller griden: huvudbild spänner 2 rader, sista sidobilden
+  // spänner 2 kolumner — inga tomma celler (Heisenbergs villkor 1).
+  const photos = property.images.slice(0, 4);
 
   return (
     <div className="b-page" style={{ paddingTop: "var(--s-5)" }}>
@@ -74,7 +76,10 @@ export default async function PropertyPage({
       {/* Fotogrid 2fr 1fr 1fr, huvudbilden spänner två rader */}
       <div className="b-photo-grid mt-8">
         {photos.map((src, i) => (
-          <div key={i} className={`b-media ${i === 0 ? "b-photo-main" : ""}`}>
+          <div
+            key={i}
+            className={`b-media ${i === 0 ? "b-photo-main" : ""} ${i === 3 ? "b-photo-wide" : ""}`}
+          >
             <Image
               src={src}
               alt={`${property.title} bild ${i + 1}`}
