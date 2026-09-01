@@ -130,6 +130,17 @@ describe("DataStore: bokningar", () => {
     expect(r2.ok).toBe(true);
   });
 
+  it("fler gäster än maxGuests avvisas av kontraktet självt", async () => {
+    const all = await store.listPublishedListings();
+    const small = all.find((l) => l.maxGuests <= 3)!;
+    const r = await store.createBooking({
+      ...bookingInput(small.id, "2027-08-01", "2027-08-04"),
+      guests: small.maxGuests + 1,
+    });
+    expect(r.ok).toBe(false);
+    expect(r.error).toBe("TOO_MANY_GUESTS");
+  });
+
   it("opublicerad listning kan inte bokas", async () => {
     const [l] = await store.listPublishedListings();
     await store.setListingStatus(l.id, DEMO_HOST_ID, "unlisted");

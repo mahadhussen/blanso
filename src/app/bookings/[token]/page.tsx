@@ -84,9 +84,10 @@ export default async function BookingConfirmationPage({
         </dl>
 
         <p className="mt-6 text-sm text-muted">
-          Spara den här länken — den är din bokningsbekräftelse. Detta är en demo: inga
-          riktiga pengar har dragits ({formatMoney(booking.totalCents, booking.currency)} i
-          sandbox) och inget mejl skickas.
+          Detta är en demo: inga riktiga pengar har dragits (
+          {formatMoney(booking.totalCents, booking.currency)} i sandbox), inget mejl skickas,
+          och bokningar nollställs när demoservern startas om — även den här länken slutar
+          då fungera.
         </p>
 
         <div className="mt-6 flex gap-3">

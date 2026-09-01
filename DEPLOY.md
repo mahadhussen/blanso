@@ -1,9 +1,11 @@
 # Deploya Blanso (Vercel — ingen databas)
 
-Blanso kör som en **delbar demo utan databas**. Boendedatan är statisk och
-bokningsflödet är tillståndslöst (gäster kan söka, boka och se en bekräftelse —
-inget lagras). Därför deployar den **gratis på Vercel utan konton, databaser
-eller miljövariabler**.
+Blanso kör som en **delbar demo utan extern databas**. All lagring går genom
+`DataStore`-interfacet med en in-memory-implementation: värdar kan lägga upp rum
+och gäster kan boka på riktigt inom en serverprocess, men datan nollställs vid
+omstart/ny serverless-instans (sägs öppet i UI:t). Därför deployar den **gratis
+på Vercel utan konton, databaser eller miljövariabler**. Riktig persistens =
+en Supabase-implementation av samma interface, när det är dags.
 
 Repo: https://github.com/mahadhussen/blanso
 

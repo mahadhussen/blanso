@@ -24,7 +24,10 @@ export default async function HostPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Värdpanel</h1>
-          <p className="mt-1 text-muted">Lägg upp lediga rum och hantera dina boenden.</p>
+          <p className="mt-1 text-muted">
+            Lägg upp lediga rum och hantera dina boenden. Demo: data nollställs när
+            servern startas om.
+          </p>
         </div>
         <div className="flex gap-2">
           <Link

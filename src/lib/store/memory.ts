@@ -145,13 +145,14 @@ export class MemoryStore implements DataStore {
     hostId: string,
     status: Listing["status"],
   ): Promise<Listing | null> {
-    return this.updateListing(id, hostId, {}).then((l) => {
-      if (!l) return null;
-      const s = state();
-      const next = { ...l, status, updatedAt: new Date().toISOString() };
-      s.listings.set(id, next);
-      return next;
-    });
+    // En enda skrivning — samma enstegskonvention som createBooking, så mönstret
+    // inte blir två separata rundresor i en framtida SupabaseStore.
+    const s = state();
+    const cur = s.listings.get(id);
+    if (!cur || cur.hostId !== hostId) return null;
+    const next: Listing = { ...cur, status, updatedAt: new Date().toISOString() };
+    s.listings.set(id, next);
+    return next;
   }
 
   async getBlockedRanges(
@@ -203,6 +204,9 @@ export class MemoryStore implements DataStore {
     const listing = s.listings.get(input.listingId);
     if (!listing) return { ok: false, error: "LISTING_NOT_FOUND" };
     if (listing.status !== "published") return { ok: false, error: "LISTING_NOT_PUBLISHED" };
+    // Vakten bor i kontraktet, inte bara hos anroparen: varje framtida väg in
+    // (API, annan klient, SupabaseStore) får samma regel.
+    if (input.guests > listing.maxGuests) return { ok: false, error: "TOO_MANY_GUESTS" };
 
     // Atomisk i denna process: kolla + skriv utan await emellan.
     const blocked = [

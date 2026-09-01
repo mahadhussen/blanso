@@ -14,7 +14,7 @@ import type {
 export interface CreateBookingResult {
   ok: boolean;
   booking?: Booking;
-  error?: "UNAVAILABLE" | "LISTING_NOT_FOUND" | "LISTING_NOT_PUBLISHED";
+  error?: "UNAVAILABLE" | "LISTING_NOT_FOUND" | "LISTING_NOT_PUBLISHED" | "TOO_MANY_GUESTS";
 }
 
 export interface DataStore {

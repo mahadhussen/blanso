@@ -1,5 +1,18 @@
 # WORKLOG — Blanso
 
+NEEDS-DECISION: Värdinloggningen är en delad demokod (`blanso`). Ägarskyddet i
+DataStore är byggt och testat per hostId, men innan en ANDRA riktig värd någonsin
+släpps in måste per-värd-inloggning byggas (kommer naturligt med Supabase Auth).
+Flaggat av Heisenberg 2026-09-01; beslut och tidpunkt är Mahads.
+
+## 2026-09-01 — Backend-skiva: DataStore-arkitektur (natt 2)
+Hela appen bakom `DataStore`-interfacet (in-memory nu, Supabase = EN fil sen).
+Fullt värdflöde (lägg upp rum, publicera/avpublicera, blockera datum, avboka)
+och gästflöde mot lagret. 38 tester. E2E bevisad i webbläsare: värd lade upp
+"Takvåning vid Liido Beach" → gäst bokade ($272 korrekt) → syns i värdpanelen.
+Heisenberg-rond: betala-och-förlora-hålet stängt (void + ärligt besked),
+gäst-ärlighet om demodata, enstegsskrivningar, maxGuests-vakt i kontraktet.
+
 ## Slutdom: General Naadir CLEAN (2026-08-28)
 Fyra granskningsronder. Heisenberg: 5 defekter. Naadir R1: D1 (IDOR) som båda
 missat. Naadir R2: CLEAN + 2 efter (bak-fil i git, cuid-footgun). BOB:s egen

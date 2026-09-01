@@ -37,6 +37,10 @@ export interface PaymentProvider {
     currency: string;
     card: CardInput;
   }): Promise<PaymentIntent>;
+  // Återkallar/återbetalar en genomförd eller påbörjad betalning. MÅSTE anropas
+  // när en betalning lyckats men bokningen inte kunde slutföras — en gäst får
+  // aldrig stå med dragna pengar utan bokning. Mappas till refund i Stripe.
+  voidPaymentIntent(params: { intentId: string }): Promise<{ ok: boolean }>;
 }
 
 // Testkort som speglar Stripes sandbox: 4242… lyckas, 4000000000000002 nekas.
@@ -98,6 +102,12 @@ class MockProvider implements PaymentProvider {
       status,
       clientSecret: `${params.intentId}_secret`,
     };
+  }
+
+  async voidPaymentIntent(params: { intentId: string }): Promise<{ ok: boolean }> {
+    // Sandbox: inga riktiga pengar rör sig, återkallning lyckas alltid för en
+    // känd intent. Stripe-implementationen gör en riktig refund här.
+    return { ok: params.intentId.length > 0 };
   }
 }
 

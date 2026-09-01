@@ -12,14 +12,21 @@ Byggd genom Byggkedjan (Byggaren BOB → Heisenberg → General Naadir).
 - **Boendesidor** med galleri, betyg, bekvämligheter och en levande prisnedbrytning.
 - **Bokningsflöde** hela vägen: välj datum → checkout → betalning → bekräftelse.
 - **Betalning** via en sandbox-motor (Stripe-formad). Inga riktiga pengar rör sig.
-- **Värdpanel**: kodskyddad vy över boendena (demo — sparar inte nya boenden).
+- **Värdpanel** (kodskyddad): lägg upp lediga rum, publicera/avpublicera, blockera
+  datum, se bokningar med intäkt och avboka.
 - **Deterministisk prismotor** (heltal cent) och tillgänglighetslogik, båda facittestade.
+
+## Arkitektur: DataStore
+
+All lagring går genom ett `DataStore`-interface (`src/lib/store/`). I dag kör en
+in-memory-implementation (noll kostnad, data nollställs vid omstart — sägs öppet i
+UI:t). När riktig persistens ska på kopplas Supabase/Postgres in som EN fil bakom
+samma kontrakt, och kontraktstesterna i `src/lib/store/store.test.ts` bevisar den.
 
 ## Stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4. Ingen databas —
-boendedatan är statisk (`src/lib/listings.ts`) och bokningsflödet är tillståndslöst,
-så den deployar gratis var som helst.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4. Ingen extern
+databas krävs — deployar gratis var som helst.
 
 ## Kom igång
 

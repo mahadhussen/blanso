@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { priceForDates } from "@/lib/pricing";
+import { isAvailable } from "@/lib/availability";
 import { getPaymentProvider } from "@/lib/payments";
 import { bookingSchema, listingSchema } from "@/lib/validation";
 import { validateStay } from "@/lib/dates";
@@ -51,6 +52,16 @@ export async function createBookingAndPay(
     });
   } catch {
     return { status: "error", error: "Ogiltiga datum. Välj minst en natt." };
+  }
+
+  // Förkolla tillgängligheten INNAN betalning — en gäst ska aldrig betala för
+  // datum som redan är tagna. Den atomiska kollen i createBooking ligger kvar
+  // som sista skydd mot kapplöpning mellan två samtidiga gäster.
+  {
+    const blocked = await store.getBlockedRanges(listing.id);
+    if (!isAvailable({ checkIn: input.checkIn, checkOut: input.checkOut }, blocked)) {
+      return { status: "error", error: "De valda datumen är tyvärr redan bokade." };
+    }
   }
 
   // Betalning FÖRE skrivning: ingen bokning utan lyckad betalning.
@@ -102,12 +113,19 @@ export async function createBookingAndPay(
   });
 
   if (!result.ok || !result.booking) {
+    // Betalningen lyckades men bokningen kunde inte slutföras (t.ex. någon hann
+    // före i kapplöpningsfönstret). Återkalla betalningen och SÄG det — en gäst
+    // får aldrig stå med dragna pengar utan bokning, inte ens i sandbox.
+    const voided = await provider.voidPaymentIntent({ intentId: paymentRef }).catch(() => ({ ok: false }));
+    const refundNote = voided.ok
+      ? " Din betalning har återkallats — inga pengar har dragits."
+      : " Din betalning återkallas — kontakta oss om den inte syns inom kort.";
     return {
       status: "error",
       error:
-        result.error === "UNAVAILABLE"
-          ? "De valda datumen är tyvärr redan bokade."
-          : "Kunde inte skapa bokningen. Försök igen.",
+        (result.error === "UNAVAILABLE"
+          ? "De valda datumen hann tyvärr bli bokade av någon annan."
+          : "Kunde inte skapa bokningen.") + refundNote,
     };
   }
 
