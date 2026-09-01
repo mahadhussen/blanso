@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: "%s · Balaanso",
   },
   description:
-    "Boka boende i Somalia, Kenya, Etiopien, Tanzania och resten av Östafrika. Trygg bokning, tydliga priser.",
+    "Book stays in Somalia, Kenya, Ethiopia, Tanzania and the rest of East Africa. Secure booking, honest prices.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

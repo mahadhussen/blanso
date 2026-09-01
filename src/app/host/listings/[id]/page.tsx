@@ -25,20 +25,20 @@ export default async function HostListingPage({
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <Link href="/host" className="text-sm font-semibold text-brand hover:text-brand-dark">
-        ← Till värdpanelen
+        ← Back to dashboard
       </Link>
       <h1 className="mt-2 text-2xl font-semibold text-ink">{listing.title}</h1>
       <p className="text-muted">
         {listing.city}, {listing.country} ·{" "}
         <Link href={`/rooms/${listing.slug}`} className="text-brand hover:underline">
-          visa som gäst →
+          view as guest →
         </Link>
       </p>
 
       <section className="mt-8 rounded-2xl border border-line bg-background p-6">
-        <h2 className="text-lg font-semibold text-ink">Blockera datum</h2>
+        <h2 className="text-lg font-semibold text-ink">Block dates</h2>
         <p className="mt-1 text-sm text-muted">
-          Stäng perioder för underhåll eller eget bruk. Gäster kan inte boka blockerade datum.
+          Close periods for maintenance or personal use. Guests cannot book blocked dates.
         </p>
         <div className="mt-4">
           <AddBlockForm listingId={listing.id} />
@@ -48,7 +48,7 @@ export default async function HostListingPage({
       <section className="mt-6 rounded-2xl border border-line bg-background p-6">
         <h2 className="text-lg font-semibold text-ink">Upptagna perioder</h2>
         {ranges.length === 0 ? (
-          <p className="mt-2 text-sm text-muted">Inga bokningar eller blockeringar ännu.</p>
+          <p className="mt-2 text-sm text-muted">No bookings or blocks yet.</p>
         ) : (
           <ul className="mt-3 divide-y divide-line">
             {ranges.map((r, i) => (
@@ -63,7 +63,7 @@ export default async function HostListingPage({
                       : "bg-amber-50 text-amber-700"
                   }`}
                 >
-                  {r.source === "booking" ? "Bokning" : "Blockerad av dig"}
+                  {r.source === "booking" ? "Booking" : "Blocked by you"}
                 </span>
               </li>
             ))}
@@ -71,10 +71,10 @@ export default async function HostListingPage({
         )}
         {listingBookings.length > 0 && (
           <p className="mt-3 text-xs text-muted">
-            {listingBookings.length} {listingBookings.length === 1 ? "bokning" : "bokningar"} —
+            {listingBookings.length} {listingBookings.length === 1 ? "booking" : "bookings"} —
             hantera under{" "}
             <Link href="/host/bookings" className="text-brand hover:underline">
-              Bokningar
+              Bookings
             </Link>
             .
           </p>

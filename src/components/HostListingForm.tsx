@@ -11,32 +11,32 @@ export function HostListingForm() {
 
   return (
     <form action={formAction} className="space-y-5">
-      <Field name="title" label="Titel" placeholder="Ljus lägenhet nära stranden" required />
+      <Field name="title" label="Title" placeholder="Bright apartment near the beach" required />
       <div className="grid grid-cols-2 gap-4">
-        <Field name="city" label="Stad" placeholder="Mogadishu" required />
-        <Field name="country" label="Land" placeholder="Somalia" required />
+        <Field name="city" label="City" placeholder="Mogadishu" required />
+        <Field name="country" label="Country" placeholder="Somalia" required />
       </div>
       <Field
         name="description"
-        label="Beskrivning"
-        placeholder="Beskriv boendet, läget och vad som gör det speciellt."
+        label="Description"
+        placeholder="Describe the stay, the location and what makes it special."
         textarea
         required
       />
       <div className="grid grid-cols-2 gap-4">
-        <Field name="nightlyPrice" label="Pris per natt (USD)" type="number" defaultValue="75" required />
-        <Field name="cleaningFee" label="Städavgift (USD)" type="number" defaultValue="20" />
+        <Field name="nightlyPrice" label="Price per night (USD)" type="number" defaultValue="75" required />
+        <Field name="cleaningFee" label="Cleaning fee (USD)" type="number" defaultValue="20" />
       </div>
       <div className="grid grid-cols-4 gap-3">
-        <Field name="maxGuests" label="Gäster" type="number" defaultValue="4" required />
-        <Field name="bedrooms" label="Sovrum" type="number" defaultValue="2" required />
-        <Field name="beds" label="Sängar" type="number" defaultValue="2" required />
-        <Field name="baths" label="Badrum" type="number" defaultValue="1" required />
+        <Field name="maxGuests" label="Guests" type="number" defaultValue="4" required />
+        <Field name="bedrooms" label="Bedrooms" type="number" defaultValue="2" required />
+        <Field name="beds" label="Beds" type="number" defaultValue="2" required />
+        <Field name="baths" label="Bathrooms" type="number" defaultValue="1" required />
       </div>
       <Field
         name="amenities"
-        label="Bekvämligheter (kommaseparerade)"
-        placeholder="Wifi, Kök, Parkering"
+        label="Amenities (comma-separated)"
+        placeholder="Wi-Fi, Kitchen, Parking"
       />
 
       {state.status === "error" && (
@@ -48,7 +48,7 @@ export function HostListingForm() {
         disabled={pending}
         className="w-full rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
       >
-        {pending ? "Publicerar…" : "Publicera rummet"}
+        {pending ? "Publishing…" : "Publish the room"}
       </button>
     </form>
   );

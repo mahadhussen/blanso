@@ -27,17 +27,17 @@ export async function createBookingAndPay(
 ): Promise<BookingState> {
   const parsed = bookingSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { status: "error", error: parsed.error.issues[0]?.message ?? "Ogiltiga uppgifter" };
+    return { status: "error", error: parsed.error.issues[0]?.message ?? "Invalid details" };
   }
   const input = parsed.data;
   const store = getStore();
 
   const listing = await store.getListingById(input.propertyId);
   if (!listing || listing.status !== "published") {
-    return { status: "error", error: "Boendet hittades inte." };
+    return { status: "error", error: "Stay not found." };
   }
   if (input.guests > listing.maxGuests) {
-    return { status: "error", error: `Max ${listing.maxGuests} gäster för detta boende.` };
+    return { status: "error", error: `This stay takes at most ${listing.maxGuests} guests.` };
   }
   const stay = validateStay(input.checkIn, input.checkOut);
   if (!stay.ok) return { status: "error", error: stay.error };
@@ -51,7 +51,7 @@ export async function createBookingAndPay(
       checkOut: input.checkOut,
     });
   } catch {
-    return { status: "error", error: "Ogiltiga datum. Välj minst en natt." };
+    return { status: "error", error: "Invalid dates. Choose at least one night." };
   }
 
   // Förkolla tillgängligheten INNAN betalning — en gäst ska aldrig betala för
@@ -60,7 +60,7 @@ export async function createBookingAndPay(
   {
     const blocked = await store.getBlockedRanges(listing.id);
     if (!isAvailable({ checkIn: input.checkIn, checkOut: input.checkOut }, blocked)) {
-      return { status: "error", error: "De valda datumen är tyvärr redan bokade." };
+      return { status: "error", error: "Those dates are already booked." };
     }
   }
 
@@ -92,13 +92,13 @@ export async function createBookingAndPay(
   if (!paymentRef) {
     return {
       status: "error",
-      error: "Betalningen nekades. Använd sandbox-kortet 4242 4242 4242 4242 för att lyckas.",
+      error: "The payment was declined. Use sandbox card 4242 4242 4242 4242 to succeed.",
     };
   }
 
   const result = await store.createBooking({
     listingId: listing.id,
-    guestName: input.guestName,
+    guestName: `${input.guestFirstName} ${input.guestLastName}`,
     guestEmail: input.guestEmail,
     checkIn: input.checkIn,
     checkOut: input.checkOut,
@@ -118,14 +118,14 @@ export async function createBookingAndPay(
     // får aldrig stå med dragna pengar utan bokning, inte ens i sandbox.
     const voided = await provider.voidPaymentIntent({ intentId: paymentRef }).catch(() => ({ ok: false }));
     const refundNote = voided.ok
-      ? " Din betalning har återkallats — inga pengar har dragits."
-      : " Din betalning återkallas — kontakta oss om den inte syns inom kort.";
+      ? " Your payment has been reversed — no money was taken."
+      : " Your payment is being reversed — contact us if it does not show up shortly.";
     return {
       status: "error",
       error:
         (result.error === "UNAVAILABLE"
-          ? "De valda datumen hann tyvärr bli bokade av någon annan."
-          : "Kunde inte skapa bokningen.") + refundNote,
+          ? "Someone else booked those dates just before you."
+          : "Could not create the booking.") + refundNote,
     };
   }
 
@@ -149,11 +149,11 @@ export async function createListing(
   formData: FormData,
 ): Promise<ListingActionState> {
   const hostId = await requireHost();
-  if (!hostId) return { status: "error", error: "Logga in som värd innan du publicerar." };
+  if (!hostId) return { status: "error", error: "Sign in as a host before publishing." };
 
   const parsed = listingSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
-    return { status: "error", error: parsed.error.issues[0]?.message ?? "Ogiltiga uppgifter" };
+    return { status: "error", error: parsed.error.issues[0]?.message ?? "Invalid details" };
   }
   const d = parsed.data;
   const store = getStore();
@@ -161,7 +161,7 @@ export async function createListing(
 
   const listing = await store.createListing(hostId, {
     hostId,
-    hostName: host?.name ?? "Värd",
+    hostName: host?.name ?? "Host",
     title: d.title,
     city: d.city,
     country: d.country,
@@ -215,7 +215,7 @@ export interface BlockState {
 
 export async function addBlock(_prev: BlockState, formData: FormData): Promise<BlockState> {
   const hostId = await requireHost();
-  if (!hostId) return { status: "error", error: "Logga in som värd." };
+  if (!hostId) return { status: "error", error: "Sign in as a host." };
   const listingId = String(formData.get("listingId") ?? "");
   const checkIn = String(formData.get("checkIn") ?? "");
   const checkOut = String(formData.get("checkOut") ?? "");
@@ -229,7 +229,7 @@ export async function addBlock(_prev: BlockState, formData: FormData): Promise<B
     checkOut,
     note,
   });
-  if (!created) return { status: "error", error: "Kunde inte blockera datumen." };
+  if (!created) return { status: "error", error: "Could not block those dates." };
   redirect(`/host/listings/${listingId}`);
 }
 
@@ -272,7 +272,7 @@ export async function loginHost(
 ): Promise<HostLoginState> {
   const code = String(formData.get("passcode") ?? "").trim();
   if (code !== hostPasscode()) {
-    return { status: "error", error: "Fel kod. Prova igen." };
+    return { status: "error", error: "Wrong passcode. Try again." };
   }
   const store = await cookies();
   store.set(HOST_COOKIE, hostPasscode(), {

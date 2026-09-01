@@ -4,10 +4,13 @@ import { getPropertyById, getBookedRanges } from "@/lib/queries";
 import { priceForDates } from "@/lib/pricing";
 import { isAvailable } from "@/lib/availability";
 import { isoDate, validateStay } from "@/lib/dates";
-import { PriceBreakdown } from "@/components/PriceBreakdown";
 import { CheckoutForm } from "@/components/CheckoutForm";
 
-export const metadata = { title: "Checka ut" };
+// Checkout — 1:1-port av "Balaanso Booking.dc.html", med riktiga priser och
+// riktig server action. "Confirm and pay" i sammanfattningen skickar formuläret.
+
+export const metadata = { title: "Complete your booking" };
+export const dynamic = "force-dynamic";
 
 function first(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v;
@@ -22,25 +25,18 @@ export default async function CheckoutPage({
   const propertyId = first(sp.propertyId);
   const checkIn = first(sp.checkIn);
   const checkOut = first(sp.checkOut);
-  const guests = Math.max(1, parseInt(first(sp.guests) ?? "1", 10) || 1);
+  const guests = Math.max(1, parseInt(first(sp.guests) ?? "2", 10) || 2);
 
   if (!propertyId || !checkIn || !checkOut) {
-    return <Problem message="Bokningen saknar uppgifter. Gå tillbaka och välj boende och datum." />;
+    return <Problem message="The booking is missing details. Go back and pick a stay and dates." />;
   }
-
   const property = await getPropertyById(propertyId);
-  if (!property) return <Problem message="Boendet hittades inte." />;
+  if (!property) return <Problem message="Stay not found." />;
 
   const stay = validateStay(checkIn, checkOut);
   if (!stay.ok) return <Problem message={stay.error} href={`/rooms/${property.slug}`} />;
-
   if (guests > property.maxGuests) {
-    return (
-      <Problem
-        message={`Detta boende tar högst ${property.maxGuests} gäster.`}
-        href={`/rooms/${property.slug}`}
-      />
-    );
+    return <Problem message={`This stay takes at most ${property.maxGuests} guests.`} href={`/rooms/${property.slug}`} />;
   }
 
   let breakdown;
@@ -52,72 +48,76 @@ export default async function CheckoutPage({
       checkOut,
     });
   } catch {
-    return <Problem message="Ogiltiga datum. Välj minst en natt." />;
+    return <Problem message="Invalid dates. Choose at least one night." />;
   }
 
   const ranges = await getBookedRanges(property.id);
   const free = isAvailable(
     { checkIn, checkOut },
-    ranges.map((r) => ({ checkIn: isoDate(r.checkIn), checkOut: isoDate(r.checkOut), status: r.status })),
+    ranges.map((r) => ({ checkIn: isoDate(r.checkIn), checkOut: isoDate(r.checkOut) })),
   );
-  if (!free) {
-    return (
-      <Problem
-        message="De valda datumen är tyvärr redan bokade."
-        href={`/rooms/${property.slug}`}
-      />
-    );
-  }
+  if (!free) return <Problem message="Those dates are already booked." href={`/rooms/${property.slug}`} />;
 
+  const $ = (c: number) => "$" + (c % 100 === 0 ? c / 100 : (c / 100).toFixed(2));
   const cover = property.images[0];
 
   return (
-    <div className="b-page" style={{ paddingTop: "var(--s-5)" }}>
-      <Link href={`/rooms/${property.slug}`} className="b-label">
-        ← {property.title}
-      </Link>
-      <h1 className="b-h1 mt-3">Slutför bokning</h1>
+    <div style={{ background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-body)" }}>
+      <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "40px var(--page-pad) var(--s-8)" }}>
+        <div className="b-rise">
+          <div className="b-label">
+            <Link href={`/rooms/${property.slug}`} style={{ color: "var(--muted)" }}>{property.title}</Link>
+            &nbsp;/&nbsp; Booking
+          </div>
+          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "var(--text-h1)", lineHeight: 1, letterSpacing: "var(--ls-display)", textTransform: "uppercase", margin: "var(--s-3) 0 0" }}>
+            Complete your booking
+          </h1>
+        </div>
 
-      <div className="b-detail-grid mt-14">
-        <CheckoutForm
-          propertyId={property.id}
-          checkIn={checkIn}
-          checkOut={checkOut}
-          guests={guests}
-        />
+        <div className="b-detail-grid" style={{ padding: "var(--s-6) 0 0" }}>
+          <CheckoutForm propertyId={property.id} checkIn={checkIn} checkOut={checkOut} guests={guests} title={property.title} />
 
-        <aside className="lg:sticky lg:self-start" style={{ top: 96 }}>
-          <div style={{ border: "1px solid var(--ink)", background: "var(--paper)" }}>
-            <div className="b-media" style={{ height: 180 }}>
-              {cover && <Image src={cover} alt={property.title} fill sizes="380px" />}
-            </div>
-            <div style={{ padding: 24 }}>
-              <p className="b-label">
-                {property.city} · {property.country}
-              </p>
-              <h2 className="b-h3 mt-1">{property.title}</h2>
-
-              <dl className="mt-5 space-y-1" style={{ fontSize: 15 }}>
-                <div className="flex justify-between">
-                  <dt className="text-muted">Incheckning</dt>
-                  <dd>{checkIn}</dd>
+          <div>
+            <div style={{ position: "sticky", top: 24, border: "1px solid var(--ink)" }}>
+              <span className="b-media" style={{ height: 180, display: "block", position: "relative" }}>
+                {cover && <Image src={cover} alt={property.title} fill sizes="380px" />}
+              </span>
+              <div style={{ padding: "24px 28px 28px" }}>
+                <div className="b-label">{property.city}, {property.country}</div>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", marginTop: 6 }}>{property.title}</div>
+                <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: 4 }}>
+                  {checkIn} – {checkOut} · {guests} {guests === 1 ? "adult" : "adults"}
                 </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted">Utcheckning</dt>
-                  <dd>{checkOut}</dd>
+                <div style={{ marginTop: "var(--s-4)", display: "flex", flexDirection: "column", gap: 10, fontSize: "var(--text-body)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>{$(property.nightlyPriceCents)} × {breakdown.nights} {breakdown.nights === 1 ? "night" : "nights"}</span>
+                    <span>{$(breakdown.subtotalCents)}</span>
+                  </div>
+                  {breakdown.cleaningFeeCents > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span>Cleaning fee</span>
+                      <span>{$(breakdown.cleaningFeeCents)}</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span>Service fee</span>
+                    <span>{$(breakdown.serviceFeeCents)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--ink)", paddingTop: "var(--s-2)", fontWeight: 500 }}>
+                    <span>Total</span>
+                    <span>{$(breakdown.totalCents)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted">Gäster</dt>
-                  <dd>{guests}</dd>
+                <button type="submit" form="booking-form" className="b-btn b-btn-solid b-btn-block" style={{ marginTop: 22 }}>
+                  Confirm and pay
+                </button>
+                <div className="b-label" style={{ fontSize: 9, letterSpacing: 1, fontWeight: 400, textAlign: "center", marginTop: 14 }}>
+                  Sandbox payment · No real money is charged
                 </div>
-              </dl>
-
-              <div className="mt-6">
-                <PriceBreakdown breakdown={breakdown} currency={property.currency} />
               </div>
             </div>
           </div>
-        </aside>
+        </div>
       </div>
     </div>
   );
@@ -125,10 +125,10 @@ export default async function CheckoutPage({
 
 function Problem({ message, href }: { message: string; href?: string }) {
   return (
-    <div className="b-page py-24 text-center" style={{ maxWidth: 640 }}>
-      <p className="b-h3">{message}</p>
-      <Link href={href ?? "/s"} className="b-btn mt-8 inline-block">
-        Tillbaka till sökningen
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "96px var(--page-pad)", textAlign: "center" }}>
+      <p style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)" }}>{message}</p>
+      <Link href={href ?? "/s"} className="b-btn" style={{ marginTop: 32, display: "inline-block" }}>
+        Back to search
       </Link>
     </div>
   );

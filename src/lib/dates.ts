@@ -41,12 +41,12 @@ export function validateStay(
   checkIn: string | undefined,
   checkOut: string | undefined,
 ): { ok: true } | { ok: false; error: string } {
-  if (!checkIn || !checkOut) return { ok: false, error: "Välj in- och utcheckning." };
+  if (!checkIn || !checkOut) return { ok: false, error: "Choose check-in and check-out dates." };
   if (nightsBetween(checkIn, checkOut) < 1) {
-    return { ok: false, error: "Utcheckning måste vara efter incheckning." };
+    return { ok: false, error: "Check-out must be after check-in." };
   }
   if (isPastDate(checkIn)) {
-    return { ok: false, error: "Incheckningsdatumet kan inte vara i det förflutna." };
+    return { ok: false, error: "The check-in date cannot be in the past." };
   }
   return { ok: true };
 }

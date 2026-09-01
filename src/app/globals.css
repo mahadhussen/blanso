@@ -160,6 +160,10 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
 .b-rise-2 { animation: b-rise var(--dur-slow) var(--ease) 120ms both; }
 .b-rise-3 { animation: b-rise var(--dur-slow) var(--ease) 240ms both; }
 
+/* Header enligt landningssidan (four-seasons) */
+.b-nav { font-family: var(--font-label); font-size: 13px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+.b-mark { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: var(--ink); color: var(--paper); font-family: var(--font-display); font-size: 24px; }
+
 /* Sidram */
 .b-page { max-width: var(--page-max); margin: 0 auto; padding-left: var(--page-pad); padding-right: var(--page-pad); }
 @media (max-width: 760px) { .b-page { padding-left: var(--s-4); padding-right: var(--s-4); } }

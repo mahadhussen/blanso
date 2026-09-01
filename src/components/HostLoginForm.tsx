@@ -11,13 +11,13 @@ export function HostLoginForm() {
   return (
     <form action={formAction} className="space-y-4">
       <label className="block">
-        <span className="mb-1 block text-sm font-medium text-ink">Värdkod</span>
+        <span className="mb-1 block text-sm font-medium text-ink">Host passcode</span>
         <input
           name="passcode"
           type="password"
           autoComplete="off"
           className="w-full rounded-xl border border-line bg-background px-3 py-2.5 text-sm text-ink outline-none focus:border-brand"
-          placeholder="Ange värdkod"
+          placeholder="Enter passcode"
           required
         />
       </label>
@@ -29,7 +29,7 @@ export function HostLoginForm() {
         disabled={pending}
         className="w-full rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:opacity-50"
       >
-        {pending ? "Loggar in…" : "Logga in"}
+        {pending ? "Signing in…" : "Sign in"}
       </button>
     </form>
   );

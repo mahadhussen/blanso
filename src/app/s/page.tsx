@@ -1,11 +1,12 @@
-import Image from "next/image";
 import Link from "next/link";
-import { SearchBar } from "@/components/SearchBar";
 import { searchProperties } from "@/lib/queries";
-import { formatPriceShort } from "@/lib/money";
 import type { PropertyView } from "@/lib/queries";
+import { SearchBarDc } from "@/components/SearchBarDc";
 
-export const metadata = { title: "Sök boende" };
+// Sökresultat — 1:1-port av "Balaanso Search.dc.html". Chrome och typografi är
+// prototypens; data och filter är riktiga (querystring → serverfiltrering).
+
+export const metadata = { title: "Stays" };
 export const dynamic = "force-dynamic";
 
 function first(v: string | string[] | undefined): string | undefined {
@@ -15,14 +16,34 @@ function all(v: string | string[] | undefined): string[] {
   return Array.isArray(v) ? v : v ? [v] : [];
 }
 
-// Prisintervall i cent — filtren är verkliga, inte attrapper.
+// Prisband i cent — exakt prototypens etiketter.
 const PRICE_BANDS = [
-  { key: "0-75", label: "Under $75", min: 0, max: 7500 },
-  { key: "75-120", label: "$75–120", min: 7500, max: 12000 },
-  { key: "120+", label: "Över $120", min: 12000, max: Infinity },
+  { key: "u60", label: "Under $60", min: 0, max: 6000 },
+  { key: "60-120", label: "$60–120", min: 6000, max: 12000 },
+  { key: "o120", label: "Over $120", min: 12000, max: Infinity },
 ];
+// Typ härleds ur titeln (domänen har en bokningsbar enhet per listning).
+const TYPES = [
+  { key: "suite", label: "Suite", match: /suite/i },
+  { key: "villa", label: "Entire villa", match: /villa|house/i },
+  { key: "apartment", label: "Apartment", match: /apartment|loft|flat|residence/i },
+];
+const AMENITIES = ["Sea view", "Breakfast included", "Airport transfer", "24h electricity"];
 
-const FILTER_AMENITIES = ["Wifi", "Pool", "Havsutsikt", "Kök", "Parkering", "Frukost"];
+function specLine(p: PropertyView): string {
+  const bits = [
+    `${p.maxGuests} guests`,
+    `${p.bedrooms} ${p.bedrooms === 1 ? "bedroom" : "bedrooms"}`,
+    `${p.beds} ${p.beds === 1 ? "bed" : "beds"}`,
+  ];
+  if (p.amenities.includes("Sea view")) bits.push("Sea view");
+  return bits.join(" · ");
+}
+function noteLine(p: PropertyView): string {
+  const bits = ["Free cancellation"];
+  if (p.amenities.includes("Breakfast included")) bits.push("Breakfast included");
+  return bits.join(" · ");
+}
 
 export default async function SearchPage({
   searchParams,
@@ -37,20 +58,22 @@ export default async function SearchPage({
   const guests = guestsRaw ? Math.max(1, parseInt(guestsRaw, 10) || 1) : undefined;
   const sort = first(sp.sort) === "price" ? "price" : "rating";
   const priceKeys = all(sp.price);
+  const typeKeys = all(sp.type);
   const amenityKeys = all(sp.amenity);
 
   let properties = await searchProperties({ destination, guests });
-
   if (priceKeys.length > 0) {
     const bands = PRICE_BANDS.filter((b) => priceKeys.includes(b.key));
     properties = properties.filter((p) =>
       bands.some((b) => p.nightlyPriceCents >= b.min && p.nightlyPriceCents < b.max),
     );
   }
+  if (typeKeys.length > 0) {
+    const types = TYPES.filter((t) => typeKeys.includes(t.key));
+    properties = properties.filter((p) => types.some((t) => t.match.test(p.title)));
+  }
   if (amenityKeys.length > 0) {
-    properties = properties.filter((p) =>
-      amenityKeys.every((a) => p.amenities.includes(a)),
-    );
+    properties = properties.filter((p) => amenityKeys.every((a) => p.amenities.includes(a)));
   }
   properties = [...properties].sort((a, b) =>
     sort === "price"
@@ -58,33 +81,21 @@ export default async function SearchPage({
       : b.rating - a.rating || b.reviewsCount - a.reviewsCount,
   );
 
-  // Bevara alla aktiva parametrar när en enskild ändras.
-  const baseParams = new URLSearchParams();
-  if (destination) baseParams.set("destination", destination);
-  if (checkIn) baseParams.set("checkIn", checkIn);
-  if (checkOut) baseParams.set("checkOut", checkOut);
-  if (guests) baseParams.set("guests", String(guests));
-  for (const k of priceKeys) baseParams.append("price", k);
-  for (const k of amenityKeys) baseParams.append("amenity", k);
-
-  const sortHref = (s: "price" | "rating") => {
-    const p = new URLSearchParams(baseParams);
-    p.set("sort", s);
-    return `/s?${p.toString()}`;
-  };
-  const toggleHref = (kind: "price" | "amenity", key: string) => {
+  const keep = (over: Record<string, string | undefined>, toggles?: { kind: string; key: string }) => {
     const p = new URLSearchParams();
     if (destination) p.set("destination", destination);
     if (checkIn) p.set("checkIn", checkIn);
     if (checkOut) p.set("checkOut", checkOut);
     if (guests) p.set("guests", String(guests));
-    p.set("sort", sort);
-    const current = kind === "price" ? priceKeys : amenityKeys;
-    const next = current.includes(key) ? current.filter((x) => x !== key) : [...current, key];
-    const prices = kind === "price" ? next : priceKeys;
-    const amenities = kind === "amenity" ? next : amenityKeys;
-    for (const k of prices) p.append("price", k);
-    for (const k of amenities) p.append("amenity", k);
+    p.set("sort", over.sort ?? sort);
+    const lists: Record<string, string[]> = { price: [...priceKeys], type: [...typeKeys], amenity: [...amenityKeys] };
+    if (toggles) {
+      const cur = lists[toggles.kind];
+      lists[toggles.kind] = cur.includes(toggles.key) ? cur.filter((x) => x !== toggles.key) : [...cur, toggles.key];
+    }
+    for (const k of lists.price) p.append("price", k);
+    for (const k of lists.type) p.append("type", k);
+    for (const k of lists.amenity) p.append("amenity", k);
     return `/s?${p.toString()}`;
   };
 
@@ -92,75 +103,93 @@ export default async function SearchPage({
   if (checkIn) forward.set("checkIn", checkIn);
   if (checkOut) forward.set("checkOut", checkOut);
   if (guests) forward.set("guests", String(guests));
-  const query = forward.toString();
+  const q = forward.toString();
 
   const metaBits = [
-    `${properties.length} ${properties.length === 1 ? "boende" : "boenden"}`,
+    `${properties.length} ${properties.length === 1 ? "stay" : "stays"}`,
     checkIn && checkOut ? `${checkIn} – ${checkOut}` : null,
-    guests ? `${guests} ${guests === 1 ? "gäst" : "gäster"}` : null,
+    guests ? `${guests} ${guests === 1 ? "guest" : "guests"}` : null,
   ].filter(Boolean);
 
-  return (
-    <div className="b-page" style={{ paddingTop: "var(--s-5)" }}>
-      <SearchBar initial={{ destination, checkIn, checkOut, guests: guests ?? 1 }} />
+  const onS = { background: "var(--ink)", color: "var(--paper)" };
+  const offS = { background: "var(--paper)", color: "var(--ink)" };
 
-      {/* Titelrad med sortering */}
-      <div className="mt-12 flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <p className="b-label">{metaBits.join(" · ")}</p>
-          <h1 className="b-h1 mt-2">{destination || "Alla boenden"}</h1>
-        </div>
-        <div className="flex gap-2">
-          <Link href={sortHref("price")} className={`b-btn ${sort === "price" ? "b-btn-solid" : ""}`}>
-            Pris
-          </Link>
-          <Link href={sortHref("rating")} className={`b-btn ${sort === "rating" ? "b-btn-solid" : ""}`}>
-            Betyg
-          </Link>
-        </div>
+  return (
+    <div style={{ background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-body)" }}>
+      <div style={{ borderBottom: "1px solid var(--hairline)", padding: "var(--s-4) var(--page-pad)" }}>
+        <SearchBarDc initial={{ destination, checkIn, checkOut, guests: guests ?? 2 }} />
       </div>
 
-      <div className="b-search-grid mt-12">
-        {/* Filterspalt */}
-        <aside className="b-search-filters flex flex-col" style={{ gap: "var(--s-6)" }}>
-          <FilterGroup title="Pris per natt">
-            {PRICE_BANDS.map((b) => (
-              <FilterRow
-                key={b.key}
-                href={toggleHref("price", b.key)}
-                active={priceKeys.includes(b.key)}
-                label={b.label}
-              />
-            ))}
-          </FilterGroup>
-          <FilterGroup title="Faciliteter">
-            {FILTER_AMENITIES.map((a) => (
-              <FilterRow
-                key={a}
-                href={toggleHref("amenity", a)}
-                active={amenityKeys.includes(a)}
-                label={a}
-              />
-            ))}
-          </FilterGroup>
-        </aside>
+      <div style={{ maxWidth: "var(--page-max)", margin: "0 auto", padding: "var(--s-6) var(--page-pad) var(--s-8)" }}>
+        <div className="b-rise" style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "var(--s-4)", flexWrap: "wrap" }}>
+          <div>
+            <div className="b-label">{metaBits.join(" · ")}</div>
+            <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "var(--text-h1)", lineHeight: 1, letterSpacing: "var(--ls-display)", textTransform: "uppercase", margin: "var(--s-3) 0 0" }}>
+              {destination || "East Africa"}
+            </h1>
+          </div>
+          <div style={{ display: "flex", gap: "var(--s-2)" }}>
+            <Link href={keep({ sort: "price" })} className="b-btn" style={{ padding: "10px 18px", ...(sort === "price" ? onS : offS) }}>Price</Link>
+            <Link href={keep({ sort: "rating" })} className="b-btn" style={{ padding: "10px 18px", ...(sort === "rating" ? onS : offS) }}>Rating</Link>
+          </div>
+        </div>
 
-        {/* Resultat */}
-        <div>
-          {properties.length === 0 ? (
-            <div className="py-24 text-center" style={{ borderTop: "1px solid var(--ink)" }}>
-              <p className="b-h3 mt-8">Inga boenden matchade</p>
-              <p className="b-lead mt-2">
-                Prova en annan stad — Nairobi, Zanzibar eller Hargeisa — eller släpp ett filter.
-              </p>
-            </div>
-          ) : (
-            <div style={{ borderTop: "1px solid var(--ink)" }}>
-              {properties.map((p) => (
-                <ResultRow key={p.id} property={p} query={query} />
+        <div className="b-search-grid" style={{ marginTop: "var(--s-6)" }}>
+          <div className="b-search-filters" style={{ display: "flex", flexDirection: "column", gap: "var(--s-5)" }}>
+            <FilterGroup title="Price per night">
+              {PRICE_BANDS.map((b) => (
+                <FilterRow key={b.key} href={keep({}, { kind: "price", key: b.key })} on={priceKeys.includes(b.key)} label={b.label} />
               ))}
-            </div>
-          )}
+            </FilterGroup>
+            <FilterGroup title="Type">
+              {TYPES.map((t) => (
+                <FilterRow key={t.key} href={keep({}, { kind: "type", key: t.key })} on={typeKeys.includes(t.key)} label={t.label} />
+              ))}
+            </FilterGroup>
+            <FilterGroup title="Amenities">
+              {AMENITIES.map((a) => (
+                <FilterRow key={a} href={keep({}, { kind: "amenity", key: a })} on={amenityKeys.includes(a)} label={a} />
+              ))}
+            </FilterGroup>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ borderTop: "1px solid var(--ink)" }} />
+            {properties.length === 0 ? (
+              <div style={{ padding: "64px 0", borderBottom: "1px solid var(--hairline)" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)" }}>No stays matched</div>
+                <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: 8 }}>
+                  Try another destination — Nairobi, Zanzibar or Hargeisa — or clear a filter.
+                </div>
+              </div>
+            ) : (
+              properties.map((r) => (
+                <a key={r.id} href={`/rooms/${r.slug}${q ? `?${q}` : ""}`} className="b-result-row" style={{ padding: "28px 0", borderBottom: "1px solid var(--hairline)", color: "var(--ink)" }}>
+                  <span className="b-media" style={{ width: 240, height: 170 }}>
+                    <div style={{ width: "100%", height: "100%", backgroundSize: "cover", backgroundPosition: "center", backgroundImage: `url("${r.images[0]}")` }} />
+                  </span>
+                  <div>
+                    <div className="b-label">{r.city}, {r.country}</div>
+                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", marginTop: 6 }}>{r.title}</div>
+                    <div className="b-label" style={{ fontSize: 11, letterSpacing: 1.5, fontWeight: 600, marginTop: "var(--s-1)" }}>{specLine(r)}</div>
+                    <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: "var(--s-1)" }}>{noteLine(r)}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    {r.rating > 0 ? (
+                      <>
+                        <span style={{ background: "var(--ink)", color: "var(--paper)", fontFamily: "var(--font-label)", fontSize: 13, fontWeight: 700, padding: "4px 8px" }}>{r.rating.toFixed(1)}</span>
+                        <div className="b-label" style={{ letterSpacing: "var(--ls-label-tight)", marginTop: 2 }}>{r.reviewsCount} reviews</div>
+                      </>
+                    ) : (
+                      <span className="b-label b-label-ink">New</span>
+                    )}
+                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-num)", marginTop: "var(--s-3)" }}>${Math.round(r.nightlyPriceCents / 100)}</div>
+                    <div className="b-label" style={{ letterSpacing: "var(--ls-label-tight)", marginTop: 2 }}>per night</div>
+                  </div>
+                </a>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -170,70 +199,20 @@ export default async function SearchPage({
 function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="b-label b-label-ink" style={{ marginBottom: "var(--s-3)" }}>
-        {title}
-      </p>
-      <div className="flex flex-col" style={{ gap: 10 }}>{children}</div>
+      <div className="b-label b-label-ink">{title}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: "var(--s-3)", fontSize: "var(--text-body)" }}>{children}</div>
     </div>
   );
 }
 
-function FilterRow({ href, active, label }: { href: string; active: boolean; label: string }) {
+function FilterRow({ href, on, label }: { href: string; on: boolean; label: string }) {
   return (
-    <Link href={href} className="flex items-center gap-3" aria-current={active ? "true" : undefined}>
+    <Link href={href} style={{ display: "flex", gap: 10, alignItems: "center", cursor: "pointer", color: "var(--ink)" }}>
       <span
         aria-hidden
-        style={{
-          width: 14,
-          height: 14,
-          border: "1px solid var(--ink)",
-          background: active ? "var(--ink)" : "var(--paper)",
-          display: "inline-block",
-          flexShrink: 0,
-        }}
+        style={{ width: 14, height: 14, border: "1px solid var(--ink)", background: on ? "var(--ink)" : "var(--paper)", display: "inline-block", flexShrink: 0 }}
       />
-      <span style={{ fontSize: "var(--text-body)" }}>{label}</span>
-    </Link>
-  );
-}
-
-function ResultRow({ property, query }: { property: PropertyView; query: string }) {
-  const href = `/rooms/${property.slug}${query ? `?${query}` : ""}`;
-  const cover = property.images[0];
-  return (
-    <Link
-      href={href}
-      className="b-result-row block py-7"
-      style={{ borderBottom: "1px solid var(--hairline)" }}
-    >
-      <div className="b-media" style={{ width: 240, height: 170 }}>
-        {cover && <Image src={cover} alt={property.title} fill sizes="240px" />}
-      </div>
-      <div className="min-w-0">
-        <p className="b-label">
-          {property.city} · {property.country}
-        </p>
-        <h2 className="b-h3 mt-1">{property.title}</h2>
-        <p className="mt-2 text-muted" style={{ fontSize: 15, maxWidth: "52ch" }}>
-          {property.description.slice(0, 110)}…
-        </p>
-      </div>
-      <div className="text-right">
-        {property.rating > 0 ? (
-          <>
-            <p style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-num)", fontWeight: 500 }}>
-              {property.rating.toFixed(1)}
-            </p>
-            <p className="b-label mt-1">{property.reviewsCount} recensioner</p>
-          </>
-        ) : (
-          <p className="b-label b-label-ink">Ny</p>
-        )}
-        <p className="mt-4" style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 500 }}>
-          {formatPriceShort(property.nightlyPriceCents, property.currency)}
-        </p>
-        <p className="b-label">per natt</p>
-      </div>
+      {label}
     </Link>
   );
 }

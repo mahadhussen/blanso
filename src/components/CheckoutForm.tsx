@@ -2,9 +2,25 @@
 
 import { useActionState, useState } from "react";
 import { createBookingAndPay, type BookingState } from "@/app/actions";
-import { SANDBOX_CARDS } from "@/lib/payments";
+
+// Bokningsformuläret — 1:1 från "Balaanso Booking.dc.html". Kort är funktionellt
+// (sandbox); EVC Plus/Zaad och Pay on arrival visas som i prototypen men är
+// ärligt märkta "coming soon" — inga fejkade pengaflöden.
 
 const initial: BookingState = { status: "idle" };
+
+const label9: React.CSSProperties = { fontSize: 9, letterSpacing: "var(--ls-label-tight)" };
+const inputS: React.CSSProperties = {
+  display: "block",
+  width: "100%",
+  marginTop: 6,
+  border: "1px solid var(--hairline)",
+  padding: "12px 14px",
+  fontFamily: "var(--font-body)",
+  fontSize: "var(--text-body)",
+  background: "var(--paper)",
+  color: "var(--ink)",
+};
 
 type Method = "card" | "mobile" | "arrival";
 
@@ -13,185 +29,142 @@ export function CheckoutForm({
   checkIn,
   checkOut,
   guests,
+  title,
 }: {
   propertyId: string;
   checkIn: string;
   checkOut: string;
   guests: number;
+  title: string;
 }) {
-  // Lyckad väg redirectar från servern till /bookings/[token].
   const [state, formAction, pending] = useActionState(createBookingAndPay, initial);
   const [method, setMethod] = useState<Method>("card");
 
+  const radioRow = (m: Method, text: string, note?: string) => (
+    <label
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        border: method === m ? "1px solid var(--ink)" : "1px solid var(--hairline)",
+        padding: "var(--s-3) var(--s-4)",
+        cursor: note ? "not-allowed" : "pointer",
+        fontSize: "var(--text-body)",
+        color: note ? "var(--faint)" : "var(--ink)",
+      }}
+    >
+      <input
+        type="radio"
+        name="pay"
+        checked={method === m}
+        disabled={Boolean(note)}
+        onChange={() => setMethod(m)}
+        style={{ accentColor: "#000" }}
+      />
+      {text}
+      {note && <span className="b-label" style={{ marginLeft: "auto" }}>{note}</span>}
+    </label>
+  );
+
   return (
-    <form action={formAction} className="space-y-12">
+    <form id="booking-form" action={formAction} style={{ display: "flex", flexDirection: "column", gap: "var(--s-6)" }}>
       <input type="hidden" name="propertyId" value={propertyId} />
       <input type="hidden" name="checkIn" value={checkIn} />
       <input type="hidden" name="checkOut" value={checkOut} />
       <input type="hidden" name="guests" value={guests} />
 
-      {/* 1 · Din vistelse */}
-      <Section num="1" title="Din vistelse">
-        <div className="grid grid-cols-3" style={{ border: "1px solid var(--hairline)" }}>
-          <ReadOnly label="Incheckning" value={checkIn} />
-          <ReadOnly label="Utcheckning" value={checkOut} borderX />
-          <ReadOnly label="Gäster" value={String(guests)} />
-        </div>
-      </Section>
-
-      {/* 2 · Gästuppgifter */}
-      <Section num="2" title="Gästuppgifter">
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Input name="guestName" label="Fullständigt namn" autoComplete="name" required />
-          <Input name="guestEmail" type="email" label="E-post" autoComplete="email" required />
-        </div>
-      </Section>
-
-      {/* 3 · Betalning */}
-      <Section num="3" title="Betalning">
-        <div className="space-y-3">
-          <MethodRow
-            checked={method === "card"}
-            onSelect={() => setMethod("card")}
-            title="Kort"
-            note="Sandbox — inga riktiga pengar dras"
-          />
-          <MethodRow
-            checked={method === "mobile"}
-            onSelect={() => setMethod("mobile")}
-            title="EVC Plus · Zaad"
-            note="Kommer snart"
-            disabled
-          />
-          <MethodRow
-            checked={method === "arrival"}
-            onSelect={() => setMethod("arrival")}
-            title="Betala på plats"
-            note="Kommer snart"
-            disabled
-          />
-        </div>
-
-        {method === "card" && (
-          <div className="mt-6 space-y-5">
-            <p className="b-label">
-              Testkort: {SANDBOX_CARDS.SUCCESS_CARD} lyckas · {SANDBOX_CARDS.DECLINE_CARD} nekas
-            </p>
-            <Input name="cardName" label="Kortinnehavare" defaultValue="Test Gäst" required />
-            <Input
-              name="cardNumber"
-              label="Kortnummer"
-              defaultValue={SANDBOX_CARDS.SUCCESS_CARD}
-              inputMode="numeric"
-              required
-            />
-            <div className="grid grid-cols-3 gap-4">
-              <Input name="cardExpMonth" label="Månad" defaultValue="12" inputMode="numeric" required />
-              <Input name="cardExpYear" label="År" defaultValue="2030" inputMode="numeric" required />
-              <Input name="cardCvc" label="CVC" defaultValue="123" inputMode="numeric" required />
+      <div>
+        <div className="b-label b-label-ink">1 · Your stay</div>
+        <div style={{ marginTop: "var(--s-3)", border: "1px solid var(--hairline)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+            <div style={{ padding: "var(--s-3) var(--s-4)", borderRight: "1px solid var(--hairline)" }}>
+              <div className="b-label" style={label9}>Check-in</div>
+              <div style={{ fontSize: "var(--text-body)", marginTop: 4 }}>{checkIn}</div>
+            </div>
+            <div style={{ padding: "var(--s-3) var(--s-4)", borderRight: "1px solid var(--hairline)" }}>
+              <div className="b-label" style={label9}>Check-out</div>
+              <div style={{ fontSize: "var(--text-body)", marginTop: 4 }}>{checkOut}</div>
+            </div>
+            <div style={{ padding: "var(--s-3) var(--s-4)" }}>
+              <div className="b-label" style={label9}>Room</div>
+              <div style={{ fontSize: "var(--text-body)", marginTop: 4 }}>
+                {title} · {guests} {guests === 1 ? "adult" : "adults"}
+              </div>
             </div>
           </div>
-        )}
-      </Section>
+        </div>
+      </div>
+
+      <div>
+        <div className="b-label b-label-ink">2 · Guest details</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--s-3)", marginTop: "var(--s-3)" }}>
+          <label style={{ display: "block" }}>
+            <span className="b-label" style={label9}>First name</span>
+            <input type="text" name="guestFirstName" placeholder="Amina" required style={inputS} />
+          </label>
+          <label style={{ display: "block" }}>
+            <span className="b-label" style={label9}>Last name</span>
+            <input type="text" name="guestLastName" placeholder="Hassan" required style={inputS} />
+          </label>
+          <label style={{ display: "block" }}>
+            <span className="b-label" style={label9}>Email</span>
+            <input type="email" name="guestEmail" placeholder="amina@example.com" required style={inputS} />
+          </label>
+          <label style={{ display: "block" }}>
+            <span className="b-label" style={label9}>Phone</span>
+            <input type="tel" name="guestPhone" placeholder="+252 61 234 5678" style={inputS} />
+          </label>
+        </div>
+        <label style={{ display: "block", marginTop: "var(--s-3)" }}>
+          <span className="b-label" style={label9}>Message to your host (optional)</span>
+          <textarea
+            name="guestMessage"
+            rows={3}
+            placeholder="We land at 14:30 and would like a transfer."
+            style={{ ...inputS, resize: "vertical" }}
+          />
+        </label>
+      </div>
+
+      <div>
+        <div className="b-label b-label-ink">3 · Payment</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--s-2)", marginTop: "var(--s-3)" }}>
+          {radioRow("card", "Card — Visa / Mastercard")}
+          {radioRow("mobile", "EVC Plus / Zaad", "Coming soon")}
+          {radioRow("arrival", "Pay on arrival", "Coming soon")}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: "var(--s-3)", marginTop: "var(--s-3)" }}>
+          <label style={{ display: "block" }}>
+            <span className="b-label" style={label9}>Card number</span>
+            <input type="text" name="cardNumber" defaultValue="4242 4242 4242 4242" inputMode="numeric" required style={inputS} />
+          </label>
+          <label style={{ display: "block" }}>
+            <span className="b-label" style={label9}>Month</span>
+            <input type="text" name="cardExpMonth" defaultValue="12" inputMode="numeric" required style={inputS} />
+          </label>
+          <label style={{ display: "block" }}>
+            <span className="b-label" style={label9}>Year</span>
+            <input type="text" name="cardExpYear" defaultValue="2030" inputMode="numeric" required style={inputS} />
+          </label>
+          <label style={{ display: "block" }}>
+            <span className="b-label" style={label9}>CVC</span>
+            <input type="text" name="cardCvc" defaultValue="123" inputMode="numeric" required style={inputS} />
+          </label>
+        </div>
+        <input type="hidden" name="cardName" value="Sandbox Guest" />
+        <div style={{ fontSize: "var(--text-body)", color: "var(--muted)", marginTop: "var(--s-2)" }}>
+          Demo — sandbox payment, no real money is charged. Card 4242 4242 4242 4242 succeeds, 4000 0000 0000 0002 declines.
+        </div>
+      </div>
 
       {state.status === "error" && (
-        <p
-          role="alert"
-          style={{ fontSize: 15, borderLeft: "2px solid var(--ink)", paddingLeft: 12 }}
-        >
+        <div role="alert" style={{ fontSize: 15, borderLeft: "2px solid var(--ink)", paddingLeft: 12 }}>
           {state.error}
-        </p>
+        </div>
       )}
-
-      <button type="submit" disabled={pending} className="b-btn b-btn-solid b-btn-block">
-        {pending ? "Behandlar betalning…" : "Bekräfta och betala"}
-      </button>
+      {pending && (
+        <div className="b-label" aria-live="polite">Processing payment…</div>
+      )}
     </form>
-  );
-}
-
-function Section({
-  num,
-  title,
-  children,
-}: {
-  num: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
-      <legend className="flex items-baseline gap-4" style={{ padding: 0, marginBottom: 20 }}>
-        <span style={{ fontFamily: "var(--font-display)", fontSize: 30, fontWeight: 500 }}>
-          {num}
-        </span>
-        <span className="b-h3">{title}</span>
-      </legend>
-      {children}
-    </fieldset>
-  );
-}
-
-function ReadOnly({ label, value, borderX = false }: { label: string; value: string; borderX?: boolean }) {
-  return (
-    <div
-      className="p-3"
-      style={borderX ? { borderLeft: "1px solid var(--hairline)", borderRight: "1px solid var(--hairline)" } : undefined}
-    >
-      <span className="b-field-label">{label}</span>
-      <span style={{ fontSize: 15 }}>{value}</span>
-    </div>
-  );
-}
-
-function MethodRow({
-  checked,
-  onSelect,
-  title,
-  note,
-  disabled = false,
-}: {
-  checked: boolean;
-  onSelect: () => void;
-  title: string;
-  note: string;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      disabled={disabled}
-      aria-pressed={checked}
-      className="flex w-full items-center justify-between px-5 py-4 text-left"
-      style={{
-        border: checked ? "1px solid var(--ink)" : "1px solid var(--hairline)",
-        background: "var(--paper)",
-        color: disabled ? "var(--faint)" : "var(--ink)",
-        cursor: disabled ? "not-allowed" : "pointer",
-        transition: "border-color var(--dur) var(--ease)",
-      }}
-    >
-      <span style={{ fontSize: "var(--text-body)" }}>{title}</span>
-      <span className="b-label">{note}</span>
-    </button>
-  );
-}
-
-function Input({
-  name,
-  label,
-  type = "text",
-  ...rest
-}: {
-  name: string;
-  label: string;
-  type?: string;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <label className="block">
-      <span className="b-field-label">{label}</span>
-      <input name={name} type={type} className="b-input" {...rest} />
-    </label>
   );
 }

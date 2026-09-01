@@ -6,7 +6,7 @@ import { formatMoney } from "@/lib/money";
 import { isHostAuthed } from "@/lib/hostAuth";
 import { cancelBookingAction } from "@/app/actions";
 
-export const metadata = { title: "Bokningar" };
+export const metadata = { title: "Bookings" };
 
 export default async function HostBookingsPage() {
   if (!(await isHostAuthed())) redirect("/host/login");
@@ -19,34 +19,34 @@ export default async function HostBookingsPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Bokningar</h1>
+        <h1 className="text-2xl font-semibold text-ink sm:text-3xl">Bookings</h1>
         <Link href="/host" className="text-sm font-semibold text-brand hover:text-brand-dark">
-          ← Till värdpanelen
+          ← Back to dashboard
         </Link>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-4">
-        <Stat label="Totalt antal" value={String(bookings.length)} />
+        <Stat label="Total" value={String(bookings.length)} />
         <Stat
-          label="Bekräftade"
+          label="Confirmed"
           value={String(bookings.filter((b) => b.status === "confirmed").length)}
         />
-        <Stat label="Intäkt (bekräftad)" value={formatMoney(revenueCents, "USD")} />
+        <Stat label="Revenue (confirmed)" value={formatMoney(revenueCents, "USD")} />
       </div>
 
       {bookings.length === 0 ? (
         <p className="mt-10 rounded-2xl border border-line bg-panel p-8 text-center text-muted">
-          Inga bokningar ännu. När en gäst bokar dyker den upp här direkt.
+          No bookings yet. When a guest books, it shows up here right away.
         </p>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-2xl border border-line">
           <table className="w-full min-w-[44rem] text-left text-sm">
             <thead className="bg-panel text-muted">
               <tr>
-                <Th>Boende</Th>
-                <Th>Gäst</Th>
-                <Th>Datum</Th>
-                <Th>Belopp</Th>
+                <Th>Stay</Th>
+                <Th>Guest</Th>
+                <Th>Dates</Th>
+                <Th>Amount</Th>
                 <Th>Status</Th>
                 <Th> </Th>
               </tr>
@@ -62,7 +62,7 @@ export default async function HostBookingsPage() {
                   <td className="px-4 py-3 text-ink">
                     {b.checkIn} → {b.checkOut}
                     <div className="text-xs text-muted">
-                      {b.nights} nätter · {b.guests} gäster
+                      {b.nights} nights · {b.guests} guests
                     </div>
                   </td>
                   <td className="px-4 py-3 font-medium text-ink">
@@ -76,7 +76,7 @@ export default async function HostBookingsPage() {
                           : "bg-red-50 text-red-700"
                       }`}
                     >
-                      {b.status === "confirmed" ? "Bekräftad" : "Avbokad"}
+                      {b.status === "confirmed" ? "Confirmed" : "Cancelled"}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -84,7 +84,7 @@ export default async function HostBookingsPage() {
                       <form action={cancelBookingAction}>
                         <input type="hidden" name="bookingId" value={b.id} />
                         <button className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-red-300 hover:text-red-700">
-                          Avboka
+                          Cancel
                         </button>
                       </form>
                     )}

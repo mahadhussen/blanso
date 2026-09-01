@@ -45,9 +45,12 @@ const rows = LISTINGS.map((l) => ({
 
 // ignoreDuplicates: en omsådd får ALDRIG skriva över en värds ändringar
 // (t.ex. återpublicera en avpublicerad listning) — bara lägga till nya rader.
+// SEED_OVERWRITE=1 uppdaterar befintliga rader (används vid innehållsbyten som
+// engelska-migrationen). Standard: ignoreDuplicates — skriver aldrig över värdändringar.
+const overwrite = process.env.SEED_OVERWRITE === "1";
 const { error } = await client
   .from("listings")
-  .upsert(rows, { onConflict: "slug", ignoreDuplicates: true });
+  .upsert(rows, { onConflict: "slug", ignoreDuplicates: !overwrite });
 if (error) {
   console.error("Seed misslyckades:", error.message);
   process.exit(1);
