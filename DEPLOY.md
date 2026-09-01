@@ -1,35 +1,29 @@
-# Deploya Blanso (Vercel — ingen databas)
+# Deploy — Balaanso (Vercel + Supabase)
 
-Blanso kör som en **delbar demo utan extern databas**. All lagring går genom
-`DataStore`-interfacet med en in-memory-implementation: värdar kan lägga upp rum
-och gäster kan boka på riktigt inom en serverprocess, men datan nollställs vid
-omstart/ny serverless-instans (sägs öppet i UI:t). Därför deployar den **gratis
-på Vercel utan konton, databaser eller miljövariabler**. Riktig persistens =
-en Supabase-implementation av samma interface, när det är dags.
+Live: **https://blanso-orbit10.vercel.app** — kör mot Supabase-projektet
+**Balaanso** (EU) via SupabaseStore. Auto-deploy från `main` på GitHub
+(`mahadhussen/blanso`), Vercel-projekt `orbit10/blanso`.
 
-Repo: https://github.com/mahadhussen/blanso
+## Miljövariabler (satta i Vercel Production)
+- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — databasen. Utan dem kastar
+  produktionsvakten i `src/lib/store/index.ts` (tyst RAM-demo kräver `BLANSO_DEMO=1`).
+- `BLANSO_HOST_PASSCODE` (valfri) — värdpanelens kod, standard `blanso`. **Sätt egen.**
 
-## Deploya
-1. Gå till https://vercel.com/new och importera `mahadhussen/blanso` (redan kopplat).
-2. Framework detekteras som Next.js. Inga env-variabler behövs.
-3. Deploy. Efter någon minut lever URL:en, t.ex. `blanso-git-main-orbit10.vercel.app`.
+## Databas
+Schema: `supabase/migrations/` (körs via `~/.claude/skills/db-migrate` eller
+`turso`-mönstret i skillen). Seed: `npx tsx scripts/seed-supabase.mts` (idempotent,
+skriver aldrig över värdändringar). Verifiering mot riktiga db:
+`npx tsx scripts/verify-supabase.mts` (17 kontraktschecks, städar efter sig).
 
-Det är allt. Ingen databas, ingen kostnad, öppnas direkt.
-
-## Valfritt
-- **Värdpanelen** (`/host`) ligger bakom en kod (standard `blanso`). Sätt
-  `BLANSO_HOST_PASSCODE` i Vercels Environment Variables om du vill byta den.
-
-## Kör lokalt
+## Lokalt
 ```bash
 npm install
-npm run dev      # http://localhost:3000
+cp .env.example .env   # fyll i SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
+npm run dev            # http://localhost:3000
 ```
+Utan Supabase-env lokalt körs in-memory-demon (ofarligt i dev).
 
 ## Bra att veta
-- **Inga riktiga pengar.** Betalningen är sandbox (kort `4242 4242 4242 4242`
-  lyckas, `4000 0000 0000 0002` nekas).
-- **Bokningar sparas inte** i den här versionen (det är poängen — noll drift, noll
-  kostnad). Vill du ha riktig persistens finns databas-versionen i git-historiken
-  (commit före demo-omställningen) — då kopplas en Postgres på.
-- Boendedatan bor i `src/lib/listings.ts` — ändra där för att byta boenden.
+- **Betalning är sandbox** — kort `4242 4242 4242 4242` lyckas, `4000…0002` nekas.
+  Inga riktiga pengar. Riktig Stripe: implementera bakom `PaymentProvider`.
+- Designfacit: `design/DESIGNFACIT.md`. Avvikelselogg: `WORKLOG.md`.
