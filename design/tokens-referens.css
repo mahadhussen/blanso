@@ -1,0 +1,99 @@
+/* Blanso UI system — tokens + bas. Stil: ink-monokrom serif (riktning 1b). */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Färg */
+  --ink: #000000;
+  --ink-2: #2d2d2d;      /* sekundär text */
+  --muted: #6d6d6d;      /* etiketter, meta */
+  --faint: #aaa6a3;      /* placeholder */
+  --hairline: #d8d8d8;   /* linjer */
+  --paper: #ffffff;
+  --wash: #f7f6f4;       /* ljus bakgrundston */
+  --scrim: linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,.55) 100%);
+
+  /* Typografi */
+  --font-display: 'Cormorant Garamond', Garamond, serif;  /* rubriker, siffror */
+  --font-body: 'EB Garamond', Garamond, serif;            /* löptext */
+  --font-label: 'Inter', sans-serif;                      /* etiketter, knappar */
+
+  --text-display: 66px;  /* hero */
+  --text-h1: 54px;       /* sidtitel */
+  --text-h2: 42px;       /* sektionstitel */
+  --text-h3: 26px;       /* korttitel, rumsnamn */
+  --text-num: 30px;      /* pris, betyg */
+  --text-lead: 19px;     /* ingress */
+  --text-body: 17px;     /* löptext */
+  --text-label: 10px;    /* versaletikett */
+  --ls-display: 2px;
+  --ls-label: 3px;
+  --ls-label-tight: 2px;
+
+  /* Rytm */
+  --s-1: 8px; --s-2: 12px; --s-3: 16px; --s-4: 24px;
+  --s-5: 32px; --s-6: 48px; --s-7: 64px; --s-8: 96px;
+  --page-pad: 48px;
+  --page-max: 1200px;
+
+  /* Rörelse */
+  --ease: cubic-bezier(.2, .6, .2, 1);
+  --dur-fast: 150ms;
+  --dur: 300ms;
+  --dur-slow: 700ms;
+}
+
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+* { box-sizing: border-box; }
+
+a { color: var(--ink); text-decoration: none; transition: color var(--dur-fast) var(--ease); }
+a:hover { color: var(--muted); }
+::selection { background: var(--ink); color: var(--paper); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Versaletikett — systemets minsta röst */
+.b-label { font-family: var(--font-label); font-size: var(--text-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; color: var(--muted); }
+.b-label-ink { color: var(--ink); }
+
+/* Knappar */
+.b-btn { display: inline-block; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-family: var(--font-label); font-size: var(--text-label); font-weight: 700; letter-spacing: var(--ls-label); text-transform: uppercase; padding: 14px 28px; cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease); }
+.b-btn:hover { background: var(--ink); color: var(--paper); }
+.b-btn-solid { background: var(--ink); color: var(--paper); }
+.b-btn-solid:hover { background: var(--ink-2); color: var(--paper); border-color: var(--ink-2); }
+.b-btn:active { transform: translateY(1px); }
+.b-btn-block { display: block; width: 100%; text-align: center; padding: 18px 0; }
+
+/* Bilder — långsam zoom vid hover inuti .b-media */
+.b-media { overflow: hidden; display: block; }
+.b-media img, .b-media image-slot { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slow) var(--ease); }
+a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
+
+/* Entré-animation */
+@keyframes b-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.b-rise { animation: b-rise var(--dur-slow) var(--ease) both; }
+.b-rise-2 { animation: b-rise var(--dur-slow) var(--ease) 120ms both; }
+.b-rise-3 { animation: b-rise var(--dur-slow) var(--ease) 240ms both; }
+
+/* Layoutklasser med responsivt fall */
+.b-detail-grid { display: grid; grid-template-columns: minmax(0,1fr) 380px; gap: 72px; }
+.b-room-row { display: grid; grid-template-columns: 160px minmax(0,1fr) auto; gap: 28px; align-items: center; }
+@media (max-width: 1100px) {
+  .b-detail-grid { grid-template-columns: minmax(0,1fr); gap: var(--s-6); }
+}
+@media (max-width: 640px) {
+  .b-room-row { grid-template-columns: minmax(0,1fr); }
+  .b-room-row > div:last-child { text-align: left; }
+}
+.b-nowrap { white-space: nowrap; }
+
+/* Sökresultat */
+.b-search-grid { display: grid; grid-template-columns: 200px minmax(0,1fr); gap: 56px; }
+.b-result-row { display: grid; grid-template-columns: 240px minmax(0,1fr) auto; gap: 28px; align-items: center; }
+@media (max-width: 1100px) {
+  .b-search-grid { grid-template-columns: minmax(0,1fr); gap: var(--s-5); }
+  .b-search-filters { flex-direction: row !important; flex-wrap: wrap; gap: var(--s-6) !important; }
+}
+@media (max-width: 760px) {
+  .b-result-row { grid-template-columns: minmax(0,1fr); }
+  .b-result-row > div:last-child { text-align: left; }
+  .b-result-row .b-media { width: 100% !important; }
+}

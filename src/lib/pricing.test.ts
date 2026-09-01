@@ -10,9 +10,9 @@ describe("computePricing — facit", () => {
       nights: 5,
     });
     expect(b.subtotalCents).toBe(60000);
-    expect(b.serviceFeeCents).toBe(7200); // round(60000 * 0.12)
-    expect(b.totalCents).toBe(70200);
-    expect(formatMoney(b.totalCents)).toBe("$702.00");
+    expect(b.serviceFeeCents).toBe(4800); // round(60000 * 0.08)
+    expect(b.totalCents).toBe(67800);
+    expect(formatMoney(b.totalCents)).toBe("$678.00");
   });
 
   it("avrundar serviceavgiften till närmaste cent", () => {
@@ -21,13 +21,13 @@ describe("computePricing — facit", () => {
       cleaningFeeCents: 0,
       nights: 1,
     });
-    // 999 * 0.12 = 119.88 -> 120
-    expect(b.serviceFeeCents).toBe(120);
-    expect(b.totalCents).toBe(1119);
+    // 999 * 0.08 = 79.92 -> 80
+    expect(b.serviceFeeCents).toBe(80);
+    expect(b.totalCents).toBe(1079);
   });
 
-  it("använder standardavgiften 12 %", () => {
-    expect(SERVICE_FEE_RATE).toBe(0.12);
+  it("använder standardavgiften 8 %", () => {
+    expect(SERVICE_FEE_RATE).toBe(0.08);
   });
 
   it("räknar pris från datum (5 nätter)", () => {
@@ -38,7 +38,7 @@ describe("computePricing — facit", () => {
       checkOut: "2026-09-15",
     });
     expect(b.nights).toBe(5);
-    expect(b.totalCents).toBe(70200);
+    expect(b.totalCents).toBe(67800);
   });
 
   it("vägrar noll nätter och negativa belopp", () => {

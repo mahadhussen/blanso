@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+// Sökraden enligt facit: 1px svart ram, fem celler skiljda av hairlines,
+// versaletiketter, solid svart sökknapp.
 export function SearchBar({
-  variant = "hero",
   initial,
 }: {
   variant?: "hero" | "compact";
@@ -26,72 +27,60 @@ export function SearchBar({
     router.push(`/s?${params.toString()}`);
   }
 
-  const dark = variant === "hero";
-
   return (
-    <form
-      onSubmit={submit}
-      className={`grid gap-2 rounded-2xl p-2 sm:grid-cols-[1.4fr_1fr_1fr_0.8fr_auto] sm:items-end ${
-        dark ? "bg-background shadow-pop" : "border border-line bg-background shadow-card"
-      }`}
-    >
-      <Field label="Vart vill du åka?">
+    <form onSubmit={submit} className="b-searchbar">
+      <Cell label="Destination">
         <input
           type="text"
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
           placeholder="Stad eller land"
-          className="w-full bg-transparent text-sm font-medium text-ink outline-none placeholder:text-muted"
+          className="w-full bg-transparent outline-none"
+          style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-body)" }}
         />
-      </Field>
-      <Field label="Incheckning">
+      </Cell>
+      <Cell label="Incheckning">
         <input
           type="date"
           value={checkIn}
           onChange={(e) => setCheckIn(e.target.value)}
-          className="w-full bg-transparent text-sm font-medium text-ink outline-none"
+          className="w-full bg-transparent outline-none"
+          style={{ fontFamily: "var(--font-body)", fontSize: 15 }}
         />
-      </Field>
-      <Field label="Utcheckning">
+      </Cell>
+      <Cell label="Utcheckning">
         <input
           type="date"
           value={checkOut}
           min={checkIn || undefined}
           onChange={(e) => setCheckOut(e.target.value)}
-          className="w-full bg-transparent text-sm font-medium text-ink outline-none"
+          className="w-full bg-transparent outline-none"
+          style={{ fontFamily: "var(--font-body)", fontSize: 15 }}
         />
-      </Field>
-      <Field label="Gäster">
+      </Cell>
+      <Cell label="Gäster">
         <input
           type="number"
           min={1}
           max={16}
           value={guests}
           onChange={(e) => setGuests(Math.max(1, Number(e.target.value) || 1))}
-          className="w-full bg-transparent text-sm font-medium text-ink outline-none"
+          className="w-full bg-transparent outline-none"
+          style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-body)" }}
         />
-      </Field>
-      <button
-        type="submit"
-        className="flex items-center justify-center gap-2 rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-          <path d="M20 20l-3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+      </Cell>
+      <button type="submit" className="b-btn b-btn-solid" style={{ border: "none", padding: "0 32px" }}>
         Sök
       </button>
     </form>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Cell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="rounded-xl px-3 py-2 hover:bg-panel">
-      <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
-        {label}
-      </span>
-      <span className="mt-0.5 block">{children}</span>
+    <label className="block px-4 py-3">
+      <span className="b-field-label">{label}</span>
+      {children}
     </label>
   );
 }

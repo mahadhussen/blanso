@@ -1,47 +1,216 @@
 @import "tailwindcss";
 
-/* Blanso designsystem. Ett ljust, premium tema låst till varumärket:
-   djup teal + varm amber. Ingen auto-invertering, färgerna är konsekventa. */
+/* Blanso designsystem — ink-monokrom serif (designfacit: design/DESIGNFACIT.md).
+   Hierarki byggs av storlek, versaler och luft. Inga radier, inga skuggor,
+   ingen accentfärg — fotografierna bär all färg. */
 
 @theme {
-  --color-brand: #0e6e63;
-  --color-brand-dark: #0a544b;
-  --color-brand-tint: #e7f1ef;
-  --color-accent: #f5a524;
-  --color-ink: #1c2b33;
-  --color-muted: #5b6b72;
-  --color-line: #e6ebec;
-  --color-panel: #f6f8f8;
+  /* Tailwind-tokens mappade till det monokroma systemet så att alla befintliga
+     utility-klasser (text-ink, border-line, bg-panel …) följer facit. */
+  --color-brand: #000000;
+  --color-brand-dark: #2d2d2d;
+  --color-brand-tint: #f7f6f4;
+  --color-accent: #000000;
+  --color-ink: #000000;
+  --color-ink-2: #2d2d2d;
+  --color-muted: #6d6d6d;
+  --color-faint: #aaa6a3;
+  --color-line: #d8d8d8;
+  --color-panel: #f7f6f4;
   --color-background: #ffffff;
-  --color-foreground: #1c2b33;
+  --color-foreground: #000000;
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-cormorant), Garamond, serif;
+  --font-body: var(--font-eb-garamond), Garamond, serif;
+  --font-label: var(--font-inter), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-eb-garamond), Garamond, serif;
 
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
+  /* Inga border-radius i systemet. */
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
 
-  --shadow-card: 0 1px 2px rgba(16, 40, 48, 0.04), 0 6px 20px rgba(16, 40, 48, 0.06);
-  --shadow-pop: 0 12px 40px rgba(16, 40, 48, 0.14);
+  --shadow-card: none;
+  --shadow-pop: none;
 }
 
-html {
-  scroll-behavior: smooth;
+:root {
+  --ink: #000000;
+  --ink-2: #2d2d2d;
+  --muted: #6d6d6d;
+  --faint: #aaa6a3;
+  --hairline: #d8d8d8;
+  --paper: #ffffff;
+  --wash: #f7f6f4;
+  --scrim: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.55) 100%);
+
+  --text-display: 66px;
+  --text-h1: 54px;
+  --text-h2: 42px;
+  --text-h3: 26px;
+  --text-num: 30px;
+  --text-lead: 19px;
+  --text-body: 17px;
+  --text-label: 10px;
+  --ls-display: 2px;
+  --ls-label: 3px;
+  --ls-label-tight: 2px;
+
+  --s-1: 8px; --s-2: 12px; --s-3: 16px; --s-4: 24px;
+  --s-5: 32px; --s-6: 48px; --s-7: 64px; --s-8: 96px;
+  --page-pad: 48px;
+  --page-max: 1200px;
+
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur: 300ms;
+  --dur-slow: 700ms;
 }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
-  font-family: var(--font-sans);
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Diskret fokusring i varumärkesfärg för tillgänglighet. */
-:where(a, button, input, select, textarea):focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
-  border-radius: 6px;
+a { color: var(--ink); text-decoration: none; transition: color var(--dur-fast) var(--ease); }
+a:hover { color: var(--muted); }
+::selection { background: var(--ink); color: var(--paper); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Versaletikett — systemets minsta röst */
+.b-label {
+  font-family: var(--font-label);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.b-label-ink { color: var(--ink); }
+
+/* Rubrikröster */
+.b-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-display);
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+.b-h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-h1);
+  letter-spacing: var(--ls-display);
+  text-transform: uppercase;
+  line-height: 1.08;
+}
+.b-h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-h2);
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+.b-h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--text-h3);
+  line-height: 1.2;
+}
+.b-num { font-family: var(--font-display); font-weight: 500; font-size: var(--text-num); }
+.b-lead { font-size: var(--text-lead); line-height: 1.6; color: var(--ink-2); }
+
+/* Knappar */
+.b-btn {
+  display: inline-block;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-label);
+  font-size: var(--text-label);
+  font-weight: 700;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  padding: 14px 28px;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.b-btn:hover { background: var(--ink); color: var(--paper); }
+.b-btn-solid { background: var(--ink); color: var(--paper); }
+.b-btn-solid:hover { background: var(--ink-2); color: var(--paper); border-color: var(--ink-2); }
+.b-btn:active { transform: translateY(1px); }
+.b-btn-block { display: block; width: 100%; text-align: center; padding: 18px 0; }
+.b-btn:disabled { border-color: var(--hairline); color: var(--faint); background: var(--paper); cursor: not-allowed; }
+.b-btn:disabled:hover { background: var(--paper); color: var(--faint); }
+
+/* Bilder — långsam zoom vid hover inuti .b-media */
+.b-media { overflow: hidden; display: block; position: relative; }
+.b-media img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-slow) var(--ease); }
+a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
+
+/* Entré-animation */
+@keyframes b-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.b-rise { animation: b-rise var(--dur-slow) var(--ease) both; }
+.b-rise-2 { animation: b-rise var(--dur-slow) var(--ease) 120ms both; }
+.b-rise-3 { animation: b-rise var(--dur-slow) var(--ease) 240ms both; }
+
+/* Sidram */
+.b-page { max-width: var(--page-max); margin: 0 auto; padding-left: var(--page-pad); padding-right: var(--page-pad); }
+@media (max-width: 760px) { .b-page { padding-left: var(--s-4); padding-right: var(--s-4); } }
+
+/* Formulärfält */
+.b-input {
+  width: 100%;
+  border: 1px solid var(--hairline);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--text-body);
+  padding: 12px 14px;
+}
+.b-input::placeholder { color: var(--faint); }
+.b-field-label {
+  display: block;
+  font-family: var(--font-label);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: var(--ls-label-tight);
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
 }
 
-.blanso-hero-gradient {
-  background: linear-gradient(135deg, #0a544b 0%, #0e6e63 55%, #12867a 100%);
+/* Layoutklasser med responsivt fall */
+.b-detail-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 72px; }
+@media (max-width: 1100px) { .b-detail-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-6); } }
+
+.b-search-grid { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; }
+.b-result-row { display: grid; grid-template-columns: 240px minmax(0, 1fr) auto; gap: 28px; align-items: center; }
+@media (max-width: 1100px) {
+  .b-search-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); }
+  .b-search-filters { flex-direction: row !important; flex-wrap: wrap; gap: var(--s-6) !important; }
 }
+@media (max-width: 760px) {
+  .b-result-row { grid-template-columns: minmax(0, 1fr); }
+  .b-result-row > div:last-child { text-align: left; }
+  .b-result-row .b-media { width: 100% !important; }
+}
+
+.b-nowrap { white-space: nowrap; }
+
+/* Fotogrid på boendesidan: 2fr 1fr 1fr, huvudbilden spänner två rader */
+.b-photo-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-auto-rows: 280px; gap: 8px; }
+.b-photo-main { grid-row: span 2; }
+@media (max-width: 760px) { .b-photo-grid { grid-template-columns: 1fr; grid-auto-rows: 240px; } .b-photo-main { grid-row: span 1; } }
+
+/* Sökrad: 1px svart ram, celler skiljda av hairlines */
+.b-searchbar { display: grid; grid-template-columns: 1.4fr 1fr 1fr 0.7fr auto; border: 1px solid var(--ink); background: var(--paper); }
+.b-searchbar > * { border-right: 1px solid var(--hairline); }
+.b-searchbar > *:last-child { border-right: none; }
+@media (max-width: 760px) { .b-searchbar { grid-template-columns: 1fr 1fr; } .b-searchbar > * { border-bottom: 1px solid var(--hairline); } }

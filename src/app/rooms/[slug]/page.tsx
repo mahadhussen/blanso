@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getPropertyBySlug, getBookedRanges } from "@/lib/queries";
 import { BookingWidget } from "@/components/BookingWidget";
-import { StarRating } from "@/components/StarRating";
 import { isoDate } from "@/lib/dates";
+
+export const dynamic = "force-dynamic";
 
 function first(v: string | string[] | undefined): string | undefined {
   return Array.isArray(v) ? v[0] : v;
@@ -48,86 +49,81 @@ export default async function PropertyPage({
     guests: guestsRaw ? Math.max(1, parseInt(guestsRaw, 10) || 1) : 1,
   };
 
-  const [cover, ...rest] = property.images;
-  const thumbs = rest.slice(0, 4);
+  const photos = property.images.slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-      <h1 className="text-2xl font-semibold text-ink sm:text-3xl">{property.title}</h1>
-      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
-        <StarRating rating={property.rating} reviewsCount={property.reviewsCount} />
-        <span aria-hidden>·</span>
-        <span>
-          {property.city}, {property.country}
-        </span>
+    <div className="b-page" style={{ paddingTop: "var(--s-5)" }}>
+      {/* Brödsmula + titelrad */}
+      <p className="b-label">
+        {property.country} · {property.city}
+      </p>
+      <div className="mt-2 flex flex-wrap items-end justify-between gap-6">
+        <h1 className="b-h1" style={{ maxWidth: 760 }}>
+          {property.title}
+        </h1>
+        {property.rating > 0 && (
+          <div className="text-right">
+            <p style={{ fontFamily: "var(--font-display)", fontSize: 38, fontWeight: 500, lineHeight: 1 }}>
+              {property.rating.toFixed(1)}
+            </p>
+            <p className="b-label mt-1">{property.reviewsCount} recensioner</p>
+          </div>
+        )}
       </div>
 
-      {/* Galleri */}
-      <div className="mt-5 grid grid-cols-1 gap-2 overflow-hidden rounded-2xl sm:grid-cols-2">
-        <div className="relative aspect-[4/3] sm:aspect-auto sm:min-h-[22rem] bg-panel">
-          {cover && (
+      {/* Fotogrid 2fr 1fr 1fr, huvudbilden spänner två rader */}
+      <div className="b-photo-grid mt-8">
+        {photos.map((src, i) => (
+          <div key={i} className={`b-media ${i === 0 ? "b-photo-main" : ""}`}>
             <Image
-              src={cover}
-              alt={property.title}
+              src={src}
+              alt={`${property.title} bild ${i + 1}`}
               fill
-              sizes="(max-width: 640px) 100vw, 50vw"
-              className="object-cover"
-              priority
+              sizes={i === 0 ? "50vw" : "25vw"}
+              priority={i === 0}
             />
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {thumbs.map((src, i) => (
-            <div key={i} className="relative aspect-[4/3] bg-panel">
-              <Image
-                src={src}
-                alt={`${property.title} bild ${i + 2}`}
-                fill
-                sizes="25vw"
-                className="object-cover"
-              />
-            </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_22rem]">
+      <div className="b-detail-grid mt-16">
+        {/* Vänsterspalt */}
         <div>
-          <div className="flex flex-wrap gap-x-6 gap-y-1 border-b border-line pb-6 text-sm text-ink">
-            <span>{property.maxGuests} gäster</span>
-            <span>{property.bedrooms} sovrum</span>
-            <span>{property.beds} sängar</span>
-            <span>{property.baths} badrum</span>
-          </div>
+          <p className="b-label">
+            {property.maxGuests} gäster · {property.bedrooms} sovrum · {property.beds} sängar ·{" "}
+            {property.baths} badrum · Värd {property.hostName}
+          </p>
 
-          <div className="border-b border-line py-6">
-            <p className="text-sm text-muted">Värd</p>
-            <p className="font-medium text-ink">{property.hostName}</p>
-          </div>
-
-          <div className="border-b border-line py-6">
-            <h2 className="text-lg font-semibold text-ink">Om boendet</h2>
-            <p className="mt-2 leading-relaxed text-ink/90">{property.description}</p>
-          </div>
+          <section className="mt-8">
+            <h2 className="b-h3">Om boendet</h2>
+            <p className="b-lead mt-4" style={{ maxWidth: "60ch" }}>
+              {property.description}
+            </p>
+          </section>
 
           {property.amenities.length > 0 && (
-            <div className="py-6">
-              <h2 className="text-lg font-semibold text-ink">Bekvämligheter</h2>
-              <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <section className="mt-12" style={{ borderTop: "1px solid var(--ink)", paddingTop: "var(--s-5)" }}>
+              <h2 className="b-h3">Faciliteter</h2>
+              <ul className="mt-6 grid grid-cols-1 gap-x-12 gap-y-3 sm:grid-cols-2">
                 {property.amenities.map((a) => (
-                  <li key={a} className="flex items-center gap-2 text-ink/90">
-                    <span className="text-brand" aria-hidden>
-                      ✓
-                    </span>
+                  <li
+                    key={a}
+                    style={{
+                      fontSize: "var(--text-body)",
+                      borderBottom: "1px solid var(--hairline)",
+                      paddingBottom: 10,
+                    }}
+                  >
                     {a}
                   </li>
                 ))}
               </ul>
-            </div>
+            </section>
           )}
         </div>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        {/* Sticky bokningspanel: 1px svart ram */}
+        <aside className="lg:sticky lg:self-start" style={{ top: 96 }}>
           <BookingWidget
             propertyId={property.id}
             nightlyPriceCents={property.nightlyPriceCents}

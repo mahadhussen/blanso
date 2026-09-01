@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#000"/><text x="50" y="58" text-anchor="middle" font-family="Georgia,serif" font-size="22" letter-spacing="4" fill="#fff">B</text></svg></template>
+<helmet>
+<link rel="stylesheet" href="blanso/styles.css">
+</helmet>
+
+<div style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body);">
+
+  <div style="height:72px;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;padding:0 var(--page-pad);">
+    <a href="Blanso Landing v2.dc.html" style="font-family:var(--font-display);font-weight:300;font-size:28px;letter-spacing:6px;text-transform:uppercase;">Blanso</a>
+    <div style="display:flex;gap:var(--s-5);">
+      <a href="Blanso Sök.dc.html" class="b-label b-label-ink">Boenden</a>
+      <a href="#" class="b-label b-label-ink">Destinationer</a>
+      <a href="#" class="b-label b-label-ink">Bli värd</a>
+      <a href="#" class="b-label b-label-ink">Logga in</a>
+    </div>
+  </div>
+
+  <div style="position:relative;height:560px;" class="b-media">
+    <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1800&q=80&auto=format&fit=crop" alt="Kust i Östafrika" style="position:absolute;inset:0;">
+    <div style="position:absolute;inset:0;background:var(--scrim);"></div>
+    <div class="b-rise" style="position:absolute;left:0;right:0;bottom:0;padding:0 var(--page-pad) 56px;color:var(--paper);">
+      <div class="b-label" style="color:var(--paper);margin-bottom:var(--s-4);">Boende i Östafrika</div>
+      <h1 style="font-family:var(--font-display);font-weight:300;font-size:var(--text-display);line-height:.95;letter-spacing:var(--ls-display);text-transform:uppercase;margin:0;max-width:16ch;">Östafrikas egen plats att boka boende</h1>
+    </div>
+  </div>
+
+  <div style="padding:56px var(--page-pad);border-bottom:1px solid var(--hairline);">
+    <div style="max-width:var(--page-max);margin:0 auto;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto;border:1px solid var(--ink);">
+      <div style="padding:var(--s-3) 20px;border-right:1px solid var(--hairline);"><div class="b-label" style="letter-spacing:var(--ls-label-tight);">Destination</div><div style="font-size:18px;margin-top:6px;">Sök</div></div>
+      <div style="padding:var(--s-3) 20px;border-right:1px solid var(--hairline);"><div class="b-label" style="letter-spacing:var(--ls-label-tight);">Ankomst</div><div style="font-size:18px;margin-top:6px;color:var(--faint);">Datum</div></div>
+      <div style="padding:var(--s-3) 20px;border-right:1px solid var(--hairline);"><div class="b-label" style="letter-spacing:var(--ls-label-tight);">Avresa</div><div style="font-size:18px;margin-top:6px;color:var(--faint);">Datum</div></div>
+      <div style="padding:var(--s-3) 20px;border-right:1px solid var(--hairline);"><div class="b-label" style="letter-spacing:var(--ls-label-tight);">Gäster</div><div style="font-size:18px;margin-top:6px;">2</div></div>
+      <a href="Blanso Sök.dc.html" class="b-btn b-btn-solid" style="border:0;padding:0 40px;display:flex;align-items:center;">Sök</a>
+    </div>
+  </div>
+
+  <div style="max-width:var(--page-max);margin:0 auto;padding:var(--s-7) var(--page-pad) 40px;text-align:center;">
+    <div class="b-label">Utvalda boenden</div>
+    <h2 style="font-family:var(--font-display);font-weight:300;font-size:var(--text-h2);letter-spacing:1px;margin:var(--s-3) 0 0;">Från kust till högland</h2>
+  </div>
+  <div style="max-width:var(--page-max);margin:0 auto;padding:0 var(--page-pad) var(--s-7);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 32px;">
+    <a href="Blanso Hotell — Lido Beach Suite.dc.html" class="b-rise">
+      <span class="b-media" style="aspect-ratio:3/4;"><img src="https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&q=80&auto=format&fit=crop" alt="Mogadishu"></span>
+      <div class="b-label" style="margin-top:var(--s-3);">Mogadishu, Somalia</div>
+      <div style="font-family:var(--font-display);font-size:var(--text-h3);margin-top:6px;">Lido Beach Suite</div>
+      <div style="font-size:var(--text-body);color:var(--ink-2);margin-top:4px;">Från $60 / natt</div>
+    </a>
+    <a href="Blanso Hotell — Lido Beach Suite.dc.html" class="b-rise-2">
+      <span class="b-media" style="aspect-ratio:3/4;"><img src="https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800&q=80&auto=format&fit=crop" alt="Zanzibar"></span>
+      <div class="b-label" style="margin-top:var(--s-3);">Zanzibar, Tanzania</div>
+      <div style="font-family:var(--font-display);font-size:var(--text-h3);margin-top:6px;">Villa i Stone Town</div>
+      <div style="font-size:var(--text-body);color:var(--ink-2);margin-top:4px;">Från $120 / natt</div>
+    </a>
+    <a href="Blanso Hotell — Lido Beach Suite.dc.html" class="b-rise-3">
+      <span class="b-media" style="aspect-ratio:3/4;"><img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80&auto=format&fit=crop" alt="Nairobi"></span>
+      <div class="b-label" style="margin-top:var(--s-3);">Nairobi, Kenya</div>
+      <div style="font-family:var(--font-display);font-size:var(--text-h3);margin-top:6px;">Stilren loft i Westlands</div>
+      <div style="font-size:var(--text-body);color:var(--ink-2);margin-top:4px;">Från $95 / natt</div>
+    </a>
+  </div>
+
+  <div style="border-top:1px solid var(--hairline);padding:44px var(--page-pad);display:flex;justify-content:space-between;align-items:flex-start;">
+    <div style="font-family:var(--font-display);font-weight:300;font-size:22px;letter-spacing:4px;text-transform:uppercase;">Blanso</div>
+    <div class="b-label" style="letter-spacing:var(--ls-label-tight);text-align:right;line-height:2.4;">Mogadishu · Hargeisa · Nairobi<br>Addis Abeba · Zanzibar · Kampala<br>© 2026 Blanso — demo, sandbox-betalning</div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

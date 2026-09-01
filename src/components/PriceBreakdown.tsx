@@ -1,6 +1,8 @@
 import { formatMoney } from "@/lib/money";
 import type { PriceBreakdown as Breakdown } from "@/lib/pricing";
+import { SERVICE_FEE_RATE } from "@/lib/pricing";
 
+// Prisuppställning enligt facit: rader i löptext, svart topplinje före totalen.
 export function PriceBreakdown({
   breakdown,
   currency = "USD",
@@ -9,7 +11,7 @@ export function PriceBreakdown({
   currency?: string;
 }) {
   return (
-    <dl className="space-y-2 text-sm">
+    <dl className="space-y-2" style={{ fontSize: "var(--text-body)" }}>
       <Row
         label={`${formatMoney(breakdown.nightlyPriceCents, currency)} × ${breakdown.nights} ${
           breakdown.nights === 1 ? "natt" : "nätter"
@@ -19,10 +21,18 @@ export function PriceBreakdown({
       {breakdown.cleaningFeeCents > 0 && (
         <Row label="Städavgift" value={formatMoney(breakdown.cleaningFeeCents, currency)} />
       )}
-      <Row label="Blanso serviceavgift" value={formatMoney(breakdown.serviceFeeCents, currency)} />
-      <div className="mt-3 flex items-center justify-between border-t border-line pt-3 text-base font-semibold text-ink">
-        <dt>Totalt</dt>
-        <dd>{formatMoney(breakdown.totalCents, currency)}</dd>
+      <Row
+        label={`Serviceavgift ${Math.round(SERVICE_FEE_RATE * 100)} %`}
+        value={formatMoney(breakdown.serviceFeeCents, currency)}
+      />
+      <div
+        className="mt-3 flex items-baseline justify-between pt-3"
+        style={{ borderTop: "1px solid var(--ink)" }}
+      >
+        <dt className="b-label b-label-ink">Totalt</dt>
+        <dd style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 500 }}>
+          {formatMoney(breakdown.totalCents, currency)}
+        </dd>
       </div>
     </dl>
   );

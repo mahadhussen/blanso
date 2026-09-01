@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="blanso/styles.css">
+</helmet>
+
+<div style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body);">
+
+  <div style="height:72px;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;padding:0 var(--page-pad);">
+    <span style="font-family:var(--font-display);font-weight:300;font-size:28px;letter-spacing:6px;text-transform:uppercase;">Blanso</span>
+    <span class="b-label">UI-system · v1</span>
+  </div>
+
+  <div style="max-width:var(--page-max);margin:0 auto;padding:var(--s-7) var(--page-pad) var(--s-8);display:flex;flex-direction:column;gap:var(--s-8);">
+
+    <div>
+      <div class="b-label">01 · Typografi</div>
+      <div style="display:flex;flex-direction:column;gap:var(--s-5);margin-top:var(--s-5);border-top:1px solid var(--ink);padding-top:var(--s-5);">
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--s-4);align-items:baseline;">
+          <span class="b-label">Display · 66</span>
+          <span style="font-family:var(--font-display);font-weight:300;font-size:var(--text-display);line-height:.95;letter-spacing:var(--ls-display);text-transform:uppercase;">Östafrikas egen plats</span>
+        </div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--s-4);align-items:baseline;">
+          <span class="b-label">H1 · 54</span>
+          <span style="font-family:var(--font-display);font-weight:300;font-size:var(--text-h1);line-height:1;letter-spacing:var(--ls-display);text-transform:uppercase;">Lido Beach Suite</span>
+        </div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--s-4);align-items:baseline;">
+          <span class="b-label">H2 · 42</span>
+          <span style="font-family:var(--font-display);font-weight:300;font-size:var(--text-h2);letter-spacing:1px;">Från kust till högland</span>
+        </div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--s-4);align-items:baseline;">
+          <span class="b-label">H3 · 26</span>
+          <span style="font-family:var(--font-display);font-size:var(--text-h3);">Havssviten</span>
+        </div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--s-4);align-items:baseline;">
+          <span class="b-label">Ingress · 19</span>
+          <span style="font-size:var(--text-lead);line-height:1.7;max-width:60ch;display:block;">En ljus svit på andra våningen med egen terrass och fri utsikt över Indiska oceanen.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--s-4);align-items:baseline;">
+          <span class="b-label">Löptext · 17</span>
+          <span style="font-size:var(--text-body);color:var(--ink-2);">Fri avbokning till 48 h före ankomst · Frukost ingår</span>
+        </div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--s-4);align-items:baseline;">
+          <span class="b-label">Etikett · 10</span>
+          <span class="b-label">Boende i Östafrika</span>
+        </div>
+        <div style="display:grid;grid-template-columns:220px 1fr;gap:var(--s-4);align-items:baseline;">
+          <span class="b-label">Siffra · 30</span>
+          <span style="font-family:var(--font-display);font-size:var(--text-num);">$85 &nbsp; 4,8 &nbsp; 48 m²</span>
+        </div>
+      </div>
+      <p style="font-size:var(--text-body);color:var(--muted);margin:var(--s-4) 0 0;max-width:70ch;">Tre röster: Cormorant Garamond (display, siffror), EB Garamond (löptext), Inter versal 10px (etiketter, knappar). Inga andra storlekar används.</p>
+    </div>
+
+    <div>
+      <div class="b-label">02 · Färg</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:var(--s-3);margin-top:var(--s-5);border-top:1px solid var(--ink);padding-top:var(--s-5);">
+        <div><div style="height:96px;background:var(--ink);"></div><div class="b-label" style="margin-top:var(--s-2);">--ink #000</div><div style="font-size:14px;color:var(--ink-2);">Text, knappar</div></div>
+        <div><div style="height:96px;background:var(--ink-2);"></div><div class="b-label" style="margin-top:var(--s-2);">--ink-2 #2d2d2d</div><div style="font-size:14px;color:var(--ink-2);">Sekundär text</div></div>
+        <div><div style="height:96px;background:var(--muted);"></div><div class="b-label" style="margin-top:var(--s-2);">--muted #6d6d6d</div><div style="font-size:14px;color:var(--ink-2);">Etiketter, meta</div></div>
+        <div><div style="height:96px;background:var(--faint);"></div><div class="b-label" style="margin-top:var(--s-2);">--faint #aaa6a3</div><div style="font-size:14px;color:var(--ink-2);">Placeholder</div></div>
+        <div><div style="height:96px;background:var(--hairline);"></div><div class="b-label" style="margin-top:var(--s-2);">--hairline #d8d8d8</div><div style="font-size:14px;color:var(--ink-2);">Linjer</div></div>
+        <div><div style="height:96px;background:var(--wash);border:1px solid var(--hairline);"></div><div class="b-label" style="margin-top:var(--s-2);">--wash #f7f6f4</div><div style="font-size:14px;color:var(--ink-2);">Ljus yta</div></div>
+      </div>
+      <p style="font-size:var(--text-body);color:var(--muted);margin:var(--s-4) 0 0;max-width:70ch;">Monokrom. Ingen accentfärg — hierarki byggs med storlek, versaler och vitrum. Foton står för all färg.</p>
+    </div>
+
+    <div>
+      <div class="b-label">03 · Knappar och länkar</div>
+      <div style="display:flex;gap:var(--s-4);align-items:center;flex-wrap:wrap;margin-top:var(--s-5);border-top:1px solid var(--ink);padding-top:var(--s-5);">
+        <button class="b-btn b-btn-solid">Boka</button>
+        <button class="b-btn">Välj rum</button>
+        <a href="#" class="b-label b-label-ink" style="border-bottom:1px solid var(--ink);padding-bottom:4px;">Läs alla recensioner</a>
+        <a href="#" style="font-size:var(--text-body);">Textlänk i löptext</a>
+      </div>
+      <p style="font-size:var(--text-body);color:var(--muted);margin:var(--s-4) 0 0;max-width:70ch;">Hover: solid mörknar, kontur inverteras, länkar gråas — alltid 300 ms med systemets easing. Fokus: 2px svart ring.</p>
+    </div>
+
+    <div>
+      <div class="b-label">04 · Rytm</div>
+      <div style="display:flex;align-items:flex-end;gap:var(--s-3);margin-top:var(--s-5);border-top:1px solid var(--ink);padding-top:var(--s-5);">
+        <div style="text-align:center;"><div style="width:var(--s-1);height:var(--s-1);background:var(--ink);margin:0 auto;"></div><div class="b-label" style="margin-top:var(--s-2);">8</div></div>
+        <div style="text-align:center;"><div style="width:var(--s-2);height:var(--s-2);background:var(--ink);margin:0 auto;"></div><div class="b-label" style="margin-top:var(--s-2);">12</div></div>
+        <div style="text-align:center;"><div style="width:var(--s-3);height:var(--s-3);background:var(--ink);margin:0 auto;"></div><div class="b-label" style="margin-top:var(--s-2);">16</div></div>
+        <div style="text-align:center;"><div style="width:var(--s-4);height:var(--s-4);background:var(--ink);margin:0 auto;"></div><div class="b-label" style="margin-top:var(--s-2);">24</div></div>
+        <div style="text-align:center;"><div style="width:var(--s-5);height:var(--s-5);background:var(--ink);margin:0 auto;"></div><div class="b-label" style="margin-top:var(--s-2);">32</div></div>
+        <div style="text-align:center;"><div style="width:var(--s-6);height:var(--s-6);background:var(--ink);margin:0 auto;"></div><div class="b-label" style="margin-top:var(--s-2);">48</div></div>
+        <div style="text-align:center;"><div style="width:var(--s-7);height:var(--s-7);background:var(--ink);margin:0 auto;"></div><div class="b-label" style="margin-top:var(--s-2);">64</div></div>
+        <div style="text-align:center;"><div style="width:var(--s-8);height:var(--s-8);background:var(--ink);margin:0 auto;"></div><div class="b-label" style="margin-top:var(--s-2);">96</div></div>
+      </div>
+      <p style="font-size:var(--text-body);color:var(--muted);margin:var(--s-4) 0 0;max-width:70ch;">Sidmarginal 48px, maxbredd 1200px. Sektioner skiljs med vitrum (96px) och en tunn linje bara där innehållet kräver det.</p>
+    </div>
+
+    <div>
+      <div class="b-label">05 · Rörelse</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--s-4);margin-top:var(--s-5);border-top:1px solid var(--ink);padding-top:var(--s-5);">
+        <div>
+          <a href="#" class="b-media" style="aspect-ratio:4/3;"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=700&q=80&auto=format&fit=crop" alt="Bildhover"></a>
+          <div class="b-label" style="margin-top:var(--s-2);">Bild · zoom 1.04 · 700 ms</div>
+        </div>
+        <div>
+          <div class="b-rise" style="border:1px solid var(--hairline);padding:var(--s-4);font-size:var(--text-body);">Entré: stiger 16px, tonas in.</div>
+          <div class="b-label" style="margin-top:var(--s-2);">b-rise · 700 ms · stegrad 120 ms</div>
+        </div>
+        <div>
+          <button class="b-btn">Hovra mig</button>
+          <div class="b-label" style="margin-top:var(--s-2);">Tillstånd · 300 ms · ease (.2,.6,.2,1)</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="b-label">06 · Sidor</div>
+      <div style="display:flex;gap:var(--s-5);margin-top:var(--s-5);border-top:1px solid var(--ink);padding-top:var(--s-5);">
+        <a href="Blanso Landing v2.dc.html" class="b-label b-label-ink b-nowrap" style="border-bottom:1px solid var(--ink);padding-bottom:4px;">Landing v2</a>
+        <a href="Blanso Hotell — Lido Beach Suite.dc.html" class="b-label b-label-ink b-nowrap" style="border-bottom:1px solid var(--ink);padding-bottom:4px;">Hotellsida — Lido Beach Suite</a>
+        <a href="Blanso Sök.dc.html" class="b-label b-label-ink b-nowrap" style="border-bottom:1px solid var(--ink);padding-bottom:4px;">Sökresultat</a>
+        <a href="Blanso Bokning.dc.html" class="b-label b-label-ink b-nowrap" style="border-bottom:1px solid var(--ink);padding-bottom:4px;">Bokning</a>
+        <a href="Blanso Bekräftelse.dc.html" class="b-label b-label-ink b-nowrap" style="border-bottom:1px solid var(--ink);padding-bottom:4px;">Bekräftelse</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

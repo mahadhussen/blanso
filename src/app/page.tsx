@@ -1,52 +1,86 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SearchBar } from "@/components/SearchBar";
 import { PropertyCard } from "@/components/PropertyCard";
-import { searchProperties, listCities } from "@/lib/queries";
+import { searchProperties } from "@/lib/queries";
+
+// Hämta listningarna vid varje förfrågan, aldrig vid build (databas krävs ej
+// vid build-tid på Vercel).
+export const dynamic = "force-dynamic";
+
+const HERO_IMAGE = "https://picsum.photos/seed/blanso-hero-lido/2000/1100";
 
 export default async function HomePage() {
-  const [properties, cities] = await Promise.all([searchProperties(), listCities()]);
-  const featured = properties.slice(0, 8);
-  const uniqueCities = cities.slice(0, 6);
+  const properties = await searchProperties();
+  const featured = properties.slice(0, 6);
 
   return (
     <div>
-      <section className="blanso-hero-gradient">
-        <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <h1 className="max-w-2xl text-4xl font-semibold leading-tight text-white sm:text-5xl">
+      {/* Hero: fullbreddsfoto 560px med scrim, display-rubrik i nederkant. */}
+      <section className="relative" style={{ height: 560 }}>
+        <Image
+          src={HERO_IMAGE}
+          alt="Kusten vid Lido Beach, Mogadishu"
+          fill
+          priority
+          sizes="100vw"
+          style={{ objectFit: "cover" }}
+        />
+        <div className="absolute inset-0" style={{ background: "var(--scrim)" }} />
+        <div className="b-page absolute inset-x-0 bottom-0 pb-12">
+          <p className="b-label b-rise" style={{ color: "rgba(255,255,255,.85)" }}>
+            Östafrika · Somalia · Kenya · Tanzania
+          </p>
+          <h1 className="b-display b-rise-2 mt-3" style={{ color: "#fff", maxWidth: 900 }}>
             Östafrikas egen plats att boka boende
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-white/85">
-            Från Lido Beach i Mogadishu till Stone Town i Zanzibar. Trygg bokning,
-            tydliga priser, hem som känns som hem.
-          </p>
-          <div className="mt-8 max-w-4xl">
-            <SearchBar variant="hero" />
-          </div>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {uniqueCities.map((c) => (
-              <Link
-                key={c.city}
-                href={`/s?destination=${encodeURIComponent(c.city)}`}
-                className="rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/25"
-              >
-                {c.city}
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="flex items-end justify-between">
-          <h2 className="text-2xl font-semibold text-ink">Populära boenden</h2>
-          <Link href="/s" className="text-sm font-semibold text-brand hover:text-brand-dark">
-            Visa alla →
+      {/* Sökrad */}
+      <section className="b-page" style={{ marginTop: "var(--s-6)" }}>
+        <SearchBar />
+      </section>
+
+      {/* Utvalda boenden */}
+      <section className="b-page" style={{ marginTop: "var(--s-8)" }}>
+        <div className="text-center">
+          <p className="b-label">Utvalda boenden</p>
+          <h2 className="b-h2 mt-2">Från Lido Beach till Stone Town</h2>
+        </div>
+        <div
+          className="mt-12 grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {featured.map((p, i) => (
+            <div key={p.id} className={i < 3 ? `b-rise-${Math.min(i + 1, 3)}`.replace("b-rise-1", "b-rise") : undefined}>
+              <PropertyCard property={p} />
+            </div>
+          ))}
+        </div>
+        <div className="mt-16 text-center">
+          <Link href="/s" className="b-btn">
+            Visa alla boenden
           </Link>
         </div>
-        <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((p) => (
-            <PropertyCard key={p.id} property={p} />
-          ))}
+      </section>
+
+      {/* För värdar */}
+      <section
+        className="mt-24"
+        style={{ background: "var(--wash)", paddingTop: "var(--s-8)", paddingBottom: "var(--s-8)" }}
+      >
+        <div className="b-page text-center">
+          <p className="b-label">För värdar</p>
+          <h2 className="b-h2 mt-2">Har du ett ledigt rum?</h2>
+          <p className="b-lead mx-auto mt-4" style={{ maxWidth: "52ch" }}>
+            Lägg upp ditt boende på Blanso och nå resenärer i hela Östafrika.
+            Du bestämmer pris, datum och regler — vi sköter bokningen.
+          </p>
+          <div className="mt-8">
+            <Link href="/host" className="b-btn b-btn-solid">
+              Bli värd
+            </Link>
+          </div>
         </div>
       </section>
     </div>

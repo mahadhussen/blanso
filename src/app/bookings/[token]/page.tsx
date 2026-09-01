@@ -3,9 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getStore } from "@/lib/store";
 import { formatMoney } from "@/lib/money";
-import { PriceBreakdown } from "@/components/PriceBreakdown";
 
 export const metadata = { title: "Bokningsbekräftelse" };
+export const dynamic = "force-dynamic";
+
+// Visningsformat enligt facit: BLN-ÅÅÅÅ-NNNNN (härledd ur bokningen, id är sanningen).
+function displayNumber(id: string, createdAt: string): string {
+  const year = new Date(createdAt).getUTCFullYear();
+  const digits = Array.from(id.replace("bok_", "")).reduce((a, c) => a + c.charCodeAt(0), 0);
+  return `BLN-${year}-${String(10000 + (digits % 90000))}`;
+}
 
 export default async function BookingConfirmationPage({
   params,
@@ -24,99 +31,85 @@ export default async function BookingConfirmationPage({
   const confirmed = booking.status === "confirmed";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-      <div className="rounded-2xl border border-line bg-background p-8 shadow-card">
-        <div className="flex items-center gap-3">
-          <span
-            className={`flex h-11 w-11 items-center justify-center rounded-full text-white ${
-              confirmed ? "bg-brand" : "bg-muted"
-            }`}
-            aria-hidden
-          >
-            {confirmed ? "✓" : "•"}
-          </span>
-          <div>
-            <h1 className="text-xl font-semibold text-ink">
-              {confirmed ? "Bokning bekräftad" : "Bokning avbokad"}
-            </h1>
-            <p className="text-sm text-muted">
-              Bokningsnummer {booking.id.replace("bok_", "").slice(0, 8).toUpperCase()}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 flex gap-4 rounded-xl bg-panel p-4">
-          <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-lg bg-line">
-            {cover && (
-              <Image src={cover} alt={listing.title} fill sizes="96px" className="object-cover" />
-            )}
-          </div>
-          <div className="min-w-0">
-            <h2 className="font-semibold text-ink">{listing.title}</h2>
-            <p className="text-sm text-muted">
-              {listing.city}, {listing.country}
-            </p>
-            <p className="mt-1 text-sm text-ink">
-              {booking.checkIn} → {booking.checkOut} · {booking.guests}{" "}
-              {booking.guests === 1 ? "gäst" : "gäster"}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 border-t border-line pt-4">
-          <PriceBreakdown
-            breakdown={{
-              nights: booking.nights,
-              nightlyPriceCents: listing.nightlyPriceCents,
-              subtotalCents: booking.subtotalCents,
-              cleaningFeeCents: booking.cleaningFeeCents,
-              serviceFeeCents: booking.serviceFeeCents,
-              totalCents: booking.totalCents,
-            }}
-            currency={booking.currency}
-          />
-        </div>
-
-        <dl className="mt-4 space-y-1 text-sm">
-          <Row label="Gäst" value={booking.guestName} />
-          <Row label="E-post" value={booking.guestEmail} />
-          <Row
-            label="Betalstatus"
-            value={confirmed ? "Betald (sandbox)" : "Återkallad (sandbox)"}
-          />
-        </dl>
-
-        <p className="mt-6 text-sm text-muted">
-          Detta är en demo: inga riktiga pengar har dragits (
-          {formatMoney(booking.totalCents, booking.currency)} i sandbox), inget mejl skickas,
-          och bokningar nollställs när demoservern startas om — även den här länken slutar
-          då fungera.
+    <div className="b-page py-20" style={{ maxWidth: 760 }}>
+      <div className="text-center">
+        <p className="b-label b-rise">
+          Bokning {displayNumber(booking.id, booking.createdAt)} ·{" "}
+          {confirmed ? "Bekräftad" : "Avbokad"}
         </p>
+        <h1 className="b-h1 b-rise-2 mt-4">
+          {confirmed ? `Välkommen till ${listing.city}` : "Bokningen är avbokad"}
+        </h1>
+        <p className="b-lead b-rise-3 mx-auto mt-4" style={{ maxWidth: "46ch" }}>
+          {confirmed
+            ? `${listing.title} väntar på dig. En bekräftelse skickas till ${booking.guestEmail}.`
+            : "Värden har avbokat vistelsen. Betalningen är återkallad."}
+        </p>
+      </div>
 
-        <div className="mt-6 flex gap-3">
-          <Link
-            href={`/rooms/${listing.slug}`}
-            className="rounded-xl border border-line px-5 py-2.5 text-sm font-semibold text-ink hover:border-brand hover:text-brand"
-          >
-            Visa boendet
-          </Link>
-          <Link
-            href="/s"
-            className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
-          >
-            Hitta fler boenden
-          </Link>
+      {/* Kvittokort: 1px svart ram */}
+      <div className="mt-12" style={{ border: "1px solid var(--ink)" }}>
+        <div className="b-media" style={{ height: 220 }}>
+          {cover && <Image src={cover} alt={listing.title} fill sizes="760px" priority />}
         </div>
+        <div style={{ padding: 28 }}>
+          <p className="b-label">
+            {listing.city} · {listing.country} · Värd {listing.hostName}
+          </p>
+          <h2 className="b-h3 mt-1">{listing.title}</h2>
+
+          <div
+            className="mt-6 grid grid-cols-3"
+            style={{ borderTop: "1px solid var(--hairline)", paddingTop: 20 }}
+          >
+            <Fact label="Incheckning" value={booking.checkIn} />
+            <Fact label="Utcheckning" value={booking.checkOut} />
+            <Fact label="Gäster" value={`${booking.guests}`} />
+          </div>
+
+          <div
+            className="mt-6 flex items-baseline justify-between pt-5"
+            style={{ borderTop: "1px solid var(--ink)" }}
+          >
+            <div>
+              <p className="b-label b-label-ink">
+                {confirmed ? "Betalt totalt" : "Återkallat belopp"}
+              </p>
+              <p className="b-label mt-1">
+                {booking.nights} nätter · Gäst {booking.guestName} ·{" "}
+                {confirmed ? "Betald (sandbox)" : "Återkallad (sandbox)"}
+              </p>
+            </div>
+            <p style={{ fontFamily: "var(--font-display)", fontSize: 36, fontWeight: 500 }}>
+              {formatMoney(booking.totalCents, booking.currency)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-6 text-center b-label">
+        Demo — inga riktiga pengar har dragits och inget mejl skickas
+      </p>
+
+      <div className="mt-10 flex justify-center gap-4">
+        <Link href={`/rooms/${listing.slug}`} className="b-btn">
+          Visa boendet
+        </Link>
+        <Link href="/s" className="b-btn b-btn-solid">
+          Fortsätt utforska
+        </Link>
       </div>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between">
-      <dt className="text-muted">{label}</dt>
-      <dd className="text-ink">{value}</dd>
+    <div>
+      <p className="b-field-label" style={{ marginBottom: 2 }}>
+        {label}
+      </p>
+      <p style={{ fontSize: 15 }}>{value}</p>
     </div>
   );
 }

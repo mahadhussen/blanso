@@ -5,7 +5,8 @@
 import { nightsBetween } from "./dates";
 
 // Blansos gästserviceavgift som andel av delsumman.
-export const SERVICE_FEE_RATE = 0.12;
+// 8 % enligt designfacit (design/DESIGNFACIT.md) — produktbeslut 2026-09-01.
+export const SERVICE_FEE_RATE = 0.08;
 
 export interface PriceInput {
   nightlyPriceCents: number;

@@ -70,75 +70,83 @@ export function BookingWidget(props: BookingWidgetProps) {
   }
 
   return (
-    <div className="rounded-2xl border border-line bg-background p-5 shadow-card">
-      <div className="flex items-baseline gap-1">
-        <span className="text-xl font-semibold text-ink">
+    <div style={{ border: "1px solid var(--ink)", background: "var(--paper)", padding: 28 }}>
+      <div className="flex items-baseline gap-3">
+        <span style={{ fontFamily: "var(--font-display)", fontSize: 36, fontWeight: 500, lineHeight: 1 }}>
           {formatPriceShort(props.nightlyPriceCents, props.currency)}
         </span>
-        <span className="text-muted">/ natt</span>
+        <span className="b-label">per natt</span>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 overflow-hidden rounded-xl border border-line">
-        <label className="border-r border-line p-3">
-          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Incheckning
-          </span>
+      <div className="mt-6 grid grid-cols-2" style={{ border: "1px solid var(--hairline)" }}>
+        <label className="p-3" style={{ borderRight: "1px solid var(--hairline)" }}>
+          <span className="b-field-label">Incheckning</span>
           <input
             type="date"
             value={checkIn}
             min={today}
             onChange={(e) => setCheckIn(e.target.value)}
-            className="mt-1 w-full bg-transparent text-sm font-medium text-ink outline-none"
+            className="w-full bg-transparent outline-none"
+            style={{ fontFamily: "var(--font-body)", fontSize: 15 }}
           />
         </label>
         <label className="p-3">
-          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Utcheckning
-          </span>
+          <span className="b-field-label">Utcheckning</span>
           <input
             type="date"
             value={checkOut}
             min={checkIn || today}
             onChange={(e) => setCheckOut(e.target.value)}
-            className="mt-1 w-full bg-transparent text-sm font-medium text-ink outline-none"
+            className="w-full bg-transparent outline-none"
+            style={{ fontFamily: "var(--font-body)", fontSize: 15 }}
           />
         </label>
-        <label className="col-span-2 border-t border-line p-3">
-          <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Gäster
-          </span>
+        <label className="col-span-2 p-3" style={{ borderTop: "1px solid var(--hairline)" }}>
+          <span className="b-field-label">Gäster</span>
           <input
             type="number"
             min={1}
             max={props.maxGuests}
             value={guests}
             onChange={(e) => setGuests(Math.max(1, Number(e.target.value) || 1))}
-            className="mt-1 w-full bg-transparent text-sm font-medium text-ink outline-none"
+            className="w-full bg-transparent outline-none"
+            style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-body)" }}
           />
         </label>
       </div>
 
       {error && (
-        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        <p
+          className="mt-4"
+          style={{ fontSize: 15, borderLeft: "2px solid var(--ink)", paddingLeft: 12 }}
+          role="alert"
+        >
+          {error}
+        </p>
       )}
 
-      <button
-        onClick={reserve}
-        disabled={!canBook}
-        className="mt-4 w-full rounded-xl bg-brand px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {nights >= 1 ? "Reservera" : "Välj datum"}
-      </button>
-
       {breakdown && !error && (
-        <div className="mt-5 border-t border-line pt-5">
+        <div className="mt-6">
           <PriceBreakdown breakdown={breakdown} currency={props.currency} />
         </div>
       )}
 
-      <p className="mt-4 text-center text-xs text-muted">
-        Du betalar {breakdown ? formatMoney(breakdown.totalCents, props.currency) : "inget"} nu.
-        Sandbox-betalning, inga riktiga pengar dras.
+      <button onClick={reserve} disabled={!canBook} className="b-btn b-btn-solid b-btn-block mt-6">
+        {nights >= 1 ? "Boka" : "Välj datum"}
+      </button>
+
+      <p
+        className="mt-4 text-center"
+        style={{
+          fontFamily: "var(--font-label)",
+          fontSize: 9,
+          letterSpacing: 2,
+          textTransform: "uppercase",
+          color: "var(--muted)",
+        }}
+      >
+        {breakdown ? `${formatMoney(breakdown.totalCents, props.currency)} · ` : ""}
+        Sandbox — inga riktiga pengar dras
       </p>
     </div>
   );

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="blanso/styles.css">
+</helmet>
+
+<div style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body);">
+
+  <div style="height:72px;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;padding:0 var(--page-pad);">
+    <a href="Blanso Landing v2.dc.html" style="font-family:var(--font-display);font-weight:300;font-size:28px;letter-spacing:6px;text-transform:uppercase;">Blanso</a>
+    <div style="display:flex;gap:var(--s-5);">
+      <a href="Blanso Sök.dc.html" class="b-label b-label-ink">Boenden</a>
+      <a href="#" class="b-label b-label-ink">Destinationer</a>
+      <a href="#" class="b-label b-label-ink">Bli värd</a>
+      <a href="#" class="b-label b-label-ink">Logga in</a>
+    </div>
+  </div>
+
+  <div style="max-width:var(--page-max);margin:0 auto;padding:40px var(--page-pad) var(--s-8);">
+
+    <div class="b-rise">
+      <div class="b-label"><a href="Blanso Hotell — Lido Beach Suite.dc.html" style="color:var(--muted);">Lido Beach Suite</a> &nbsp;/&nbsp; Bokning</div>
+      <h1 style="font-family:var(--font-display);font-weight:300;font-size:var(--text-h1);line-height:1;letter-spacing:var(--ls-display);text-transform:uppercase;margin:var(--s-3) 0 0;">Slutför bokning</h1>
+    </div>
+
+    <div class="b-detail-grid" style="padding:var(--s-6) 0 0;">
+
+      <div style="display:flex;flex-direction:column;gap:var(--s-6);">
+
+        <div>
+          <div class="b-label b-label-ink">1 · Din vistelse</div>
+          <div style="margin-top:var(--s-3);border:1px solid var(--hairline);">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;">
+              <div style="padding:var(--s-3) var(--s-4);border-right:1px solid var(--hairline);"><div class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Ankomst</div><div style="font-size:var(--text-body);margin-top:4px;">12 okt 2026</div></div>
+              <div style="padding:var(--s-3) var(--s-4);border-right:1px solid var(--hairline);"><div class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Avresa</div><div style="font-size:var(--text-body);margin-top:4px;">17 okt 2026</div></div>
+              <div style="padding:var(--s-3) var(--s-4);"><div class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Rum</div><div style="font-size:var(--text-body);margin-top:4px;">Havssviten · 2 vuxna</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="b-label b-label-ink">2 · Gästuppgifter</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--s-3);margin-top:var(--s-3);">
+            <label style="display:block;"><span class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Förnamn</span><input type="text" placeholder="Amina" style="display:block;width:100%;margin-top:6px;border:1px solid var(--hairline);padding:12px 14px;font-family:var(--font-body);font-size:var(--text-body);background:var(--paper);"></label>
+            <label style="display:block;"><span class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Efternamn</span><input type="text" placeholder="Hassan" style="display:block;width:100%;margin-top:6px;border:1px solid var(--hairline);padding:12px 14px;font-family:var(--font-body);font-size:var(--text-body);background:var(--paper);"></label>
+            <label style="display:block;"><span class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">E-post</span><input type="email" placeholder="amina@exempel.se" style="display:block;width:100%;margin-top:6px;border:1px solid var(--hairline);padding:12px 14px;font-family:var(--font-body);font-size:var(--text-body);background:var(--paper);"></label>
+            <label style="display:block;"><span class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Telefon</span><input type="tel" placeholder="+46 70 123 45 67" style="display:block;width:100%;margin-top:6px;border:1px solid var(--hairline);padding:12px 14px;font-family:var(--font-body);font-size:var(--text-body);background:var(--paper);"></label>
+          </div>
+          <label style="display:block;margin-top:var(--s-3);"><span class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Meddelande till värden (frivilligt)</span><textarea rows="3" placeholder="Vi landar 14:30 och vill gärna ha transfer." style="display:block;width:100%;margin-top:6px;border:1px solid var(--hairline);padding:12px 14px;font-family:var(--font-body);font-size:var(--text-body);background:var(--paper);resize:vertical;"></textarea></label>
+        </div>
+
+        <div>
+          <div class="b-label b-label-ink">3 · Betalning</div>
+          <div style="display:flex;flex-direction:column;gap:var(--s-2);margin-top:var(--s-3);">
+            <label style="display:flex;align-items:center;gap:12px;border:1px solid var(--ink);padding:var(--s-3) var(--s-4);cursor:pointer;font-size:var(--text-body);"><input type="radio" name="pay" checked style="accent-color:#000;"> Kort — Visa / Mastercard</label>
+            <label style="display:flex;align-items:center;gap:12px;border:1px solid var(--hairline);padding:var(--s-3) var(--s-4);cursor:pointer;font-size:var(--text-body);"><input type="radio" name="pay" style="accent-color:#000;"> EVC Plus / Zaad</label>
+            <label style="display:flex;align-items:center;gap:12px;border:1px solid var(--hairline);padding:var(--s-3) var(--s-4);cursor:pointer;font-size:var(--text-body);"><input type="radio" name="pay" style="accent-color:#000;"> Betala på plats</label>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:var(--s-3);margin-top:var(--s-3);">
+            <label style="display:block;"><span class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Kortnummer</span><input type="text" placeholder="4242 4242 4242 4242" style="display:block;width:100%;margin-top:6px;border:1px solid var(--hairline);padding:12px 14px;font-family:var(--font-body);font-size:var(--text-body);background:var(--paper);"></label>
+            <label style="display:block;"><span class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">Giltigt till</span><input type="text" placeholder="10/28" style="display:block;width:100%;margin-top:6px;border:1px solid var(--hairline);padding:12px 14px;font-family:var(--font-body);font-size:var(--text-body);background:var(--paper);"></label>
+            <label style="display:block;"><span class="b-label" style="font-size:9px;letter-spacing:var(--ls-label-tight);">CVC</span><input type="text" placeholder="123" style="display:block;width:100%;margin-top:6px;border:1px solid var(--hairline);padding:12px 14px;font-family:var(--font-body);font-size:var(--text-body);background:var(--paper);"></label>
+          </div>
+          <div style="font-size:var(--text-body);color:var(--muted);margin-top:var(--s-2);">Demo — sandbox-betalning, inga riktiga pengar dras.</div>
+        </div>
+
+      </div>
+
+      <div>
+        <div style="position:sticky;top:24px;border:1px solid var(--ink);">
+          <span class="b-media" style="height:180px;display:block;"><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80&auto=format&fit=crop" alt="Lido Beach Suite"></span>
+          <div style="padding:24px 28px 28px;">
+            <div class="b-label">Lido Beach, Mogadishu</div>
+            <div style="font-family:var(--font-display);font-size:var(--text-h3);margin-top:6px;">Lido Beach Suite</div>
+            <div style="font-size:var(--text-body);color:var(--ink-2);margin-top:4px;">Havssviten · 48 m² · 12–17 okt · 2 vuxna</div>
+            <div style="margin-top:var(--s-4);display:flex;flex-direction:column;gap:10px;font-size:var(--text-body);">
+              <div style="display:flex;justify-content:space-between;"><span>$85 × 5 nätter</span><span>$425</span></div>
+              <div style="display:flex;justify-content:space-between;"><span>Serviceavgift</span><span>$34</span></div>
+              <div style="display:flex;justify-content:space-between;border-top:1px solid var(--ink);padding-top:var(--s-2);font-weight:500;"><span>Totalt</span><span>$459</span></div>
+            </div>
+            <a href="Blanso Bekräftelse.dc.html" class="b-btn b-btn-solid b-btn-block" style="margin-top:22px;">Bekräfta och betala</a>
+            <div class="b-label" style="font-size:9px;letter-spacing:1px;font-weight:400;text-align:center;margin-top:14px;">Fri avbokning till 10 okt · Kryptering hela vägen</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="border-top:1px solid var(--hairline);padding:44px var(--page-pad);display:flex;justify-content:space-between;align-items:flex-start;">
+    <div style="font-family:var(--font-display);font-weight:300;font-size:22px;letter-spacing:4px;text-transform:uppercase;">Blanso</div>
+    <div class="b-label" style="letter-spacing:var(--ls-label-tight);text-align:right;line-height:2.4;">Mogadishu · Hargeisa · Nairobi<br>Addis Abeba · Zanzibar · Kampala<br>© 2026 Blanso — demo, sandbox-betalning</div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

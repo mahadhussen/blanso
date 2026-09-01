@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="blanso/styles.css">
+</helmet>
+
+<div style="min-height:100vh;background:var(--paper);color:var(--ink);font-family:var(--font-body);">
+
+  <div style="height:72px;border-bottom:1px solid var(--hairline);display:flex;align-items:center;justify-content:space-between;padding:0 var(--page-pad);">
+    <a href="Blanso Landing v2.dc.html" style="font-family:var(--font-display);font-weight:300;font-size:28px;letter-spacing:6px;text-transform:uppercase;">Blanso</a>
+    <div style="display:flex;gap:var(--s-5);">
+      <a href="Blanso Sök.dc.html" class="b-label b-label-ink">Boenden</a>
+      <a href="#" class="b-label b-label-ink">Destinationer</a>
+      <a href="#" class="b-label b-label-ink">Bli värd</a>
+      <a href="#" class="b-label b-label-ink">Logga in</a>
+    </div>
+  </div>
+
+  <div style="border-bottom:1px solid var(--hairline);padding:var(--s-4) var(--page-pad);">
+    <div style="max-width:var(--page-max);margin:0 auto;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto;border:1px solid var(--ink);">
+      <div style="padding:var(--s-2) 20px;border-right:1px solid var(--hairline);"><div class="b-label" style="letter-spacing:var(--ls-label-tight);">Destination</div><div style="font-size:18px;margin-top:4px;">Mogadishu</div></div>
+      <div style="padding:var(--s-2) 20px;border-right:1px solid var(--hairline);"><div class="b-label" style="letter-spacing:var(--ls-label-tight);">Ankomst</div><div style="font-size:18px;margin-top:4px;">12 okt</div></div>
+      <div style="padding:var(--s-2) 20px;border-right:1px solid var(--hairline);"><div class="b-label" style="letter-spacing:var(--ls-label-tight);">Avresa</div><div style="font-size:18px;margin-top:4px;">17 okt</div></div>
+      <div style="padding:var(--s-2) 20px;border-right:1px solid var(--hairline);"><div class="b-label" style="letter-spacing:var(--ls-label-tight);">Gäster</div><div style="font-size:18px;margin-top:4px;">2</div></div>
+      <button class="b-btn b-btn-solid" style="border:0;padding:0 40px;">Sök</button>
+    </div>
+  </div>
+
+  <div style="max-width:var(--page-max);margin:0 auto;padding:var(--s-6) var(--page-pad) var(--s-8);">
+
+    <div class="b-rise" style="display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s-4);flex-wrap:wrap;">
+      <div>
+        <div class="b-label">{{ count }} boenden · 12–17 okt · 2 gäster</div>
+        <h1 style="font-family:var(--font-display);font-weight:300;font-size:var(--text-h1);line-height:1;letter-spacing:var(--ls-display);text-transform:uppercase;margin:var(--s-3) 0 0;">Mogadishu</h1>
+      </div>
+      <div style="display:flex;gap:var(--s-2);">
+        <button onClick="{{ sortPrice }}" class="b-btn" style="padding:10px 18px;background:{{ priceBg }};color:{{ priceFg }};">Pris</button>
+        <button onClick="{{ sortRating }}" class="b-btn" style="padding:10px 18px;background:{{ ratingBg }};color:{{ ratingFg }};">Betyg</button>
+      </div>
+    </div>
+
+    <div class="b-search-grid" style="margin-top:var(--s-6);">
+
+      <div class="b-search-filters" style="display:flex;flex-direction:column;gap:var(--s-5);">
+        <div>
+          <div class="b-label b-label-ink">Pris per natt</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:var(--s-3);font-size:var(--text-body);">
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" style="accent-color:#000;"> Under $60</label>
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" checked style="accent-color:#000;"> $60–120</label>
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" style="accent-color:#000;"> Över $120</label>
+          </div>
+        </div>
+        <div>
+          <div class="b-label b-label-ink">Typ</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:var(--s-3);font-size:var(--text-body);">
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" checked style="accent-color:#000;"> Svit</label>
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" style="accent-color:#000;"> Hel villa</label>
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" style="accent-color:#000;"> Lägenhet</label>
+          </div>
+        </div>
+        <div>
+          <div class="b-label b-label-ink">Faciliteter</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:var(--s-3);font-size:var(--text-body);">
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" checked style="accent-color:#000;"> Havsutsikt</label>
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" style="accent-color:#000;"> Frukost ingår</label>
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" style="accent-color:#000;"> Flygplatstransfer</label>
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer;"><input type="checkbox" style="accent-color:#000;"> El dygnet runt</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;">
+        <div style="border-top:1px solid var(--ink);"></div>
+        <sc-for list="{{ results }}" as="r" hint-placeholder-count="0">
+          <a href="{{ r.href }}" class="b-result-row" style="padding:28px 0;border-bottom:1px solid var(--hairline);">
+            <span class="b-media" style="width:240px;height:170px;"><div style="width:100%;height:100%;background-size:cover;background-position:center;background-image:{{ r.bg }};"></div></span>
+            <div>
+              <div class="b-label">{{ r.area }}</div>
+              <div style="font-family:var(--font-display);font-size:var(--text-h3);margin-top:6px;">{{ r.name }}</div>
+              <div class="b-label" style="font-size:11px;letter-spacing:1.5px;font-weight:600;margin-top:var(--s-1);">{{ r.spec }}</div>
+              <div style="font-size:var(--text-body);color:var(--ink-2);margin-top:var(--s-1);">{{ r.note }}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:var(--font-display);font-size:24px;">{{ r.rating }}</div>
+              <div class="b-label" style="letter-spacing:var(--ls-label-tight);margin-top:2px;">{{ r.reviews }} recensioner</div>
+              <div style="font-family:var(--font-display);font-size:var(--text-num);margin-top:var(--s-3);">{{ r.priceLabel }}</div>
+              <div class="b-label" style="letter-spacing:var(--ls-label-tight);margin-top:2px;">per natt</div>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="border-top:1px solid var(--hairline);padding:44px var(--page-pad);display:flex;justify-content:space-between;align-items:flex-start;">
+    <div style="font-family:var(--font-display);font-weight:300;font-size:22px;letter-spacing:4px;text-transform:uppercase;">Blanso</div>
+    <div class="b-label" style="letter-spacing:var(--ls-label-tight);text-align:right;line-height:2.4;">Mogadishu · Hargeisa · Nairobi<br>Addis Abeba · Zanzibar · Kampala<br>© 2026 Blanso — demo, sandbox-betalning</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sort: "rating" };
+  data = [
+    { name: "Lido Beach Suite", area: "Lido Beach", spec: "48 m² · King size · 2 gäster · Havsutsikt", note: "Fri avbokning · Frukost ingår", rating: "4,8", reviews: 128, price: 85, img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=700&q=80&auto=format&fit=crop", href: "Blanso Hotell — Lido Beach Suite.dc.html" },
+    { name: "Jazeera Beach House", area: "Jazeera", spec: "120 m² · Hel villa · 6 gäster · Egen strand", note: "Fri avbokning · Kock kan bokas", rating: "4,9", reviews: 64, price: 210, img: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=700&q=80&auto=format&fit=crop", href: "Blanso Hotell — Lido Beach Suite.dc.html" },
+    { name: "Hamarweyne Loft", area: "Gamla stan", spec: "54 m² · Queen size · 2 gäster · Takterrass", note: "Fri avbokning till 48 h", rating: "4,7", reviews: 92, price: 65, img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80&auto=format&fit=crop", href: "Blanso Hotell — Lido Beach Suite.dc.html" },
+    { name: "Peace Garden Apartment", area: "Hodan", spec: "68 m² · 2 sovrum · 4 gäster · Trädgård", note: "Frukost ingår · Flygplatstransfer", rating: "4,6", reviews: 41, price: 55, img: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=700&q=80&auto=format&fit=crop", href: "Blanso Hotell — Lido Beach Suite.dc.html" },
+    { name: "Aden Adde Residence", area: "Wadajir", spec: "40 m² · King size · 2 gäster · Nära flygplatsen", note: "Fri avbokning · El dygnet runt", rating: "4,5", reviews: 77, price: 48, img: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=700&q=80&auto=format&fit=crop", href: "Blanso Hotell — Lido Beach Suite.dc.html" }
+  ];
+  renderVals() {
+    const sort = this.state.sort;
+    const results = [...this.data]
+      .sort((a, b) => sort === "price" ? a.price - b.price : parseFloat(b.rating.replace(",", ".")) - parseFloat(a.rating.replace(",", ".")))
+      .map(r => ({ ...r, priceLabel: "$" + r.price, bg: 'url("' + r.img + '")' }));
+    const on = { bg: "var(--ink)", fg: "var(--paper)" }, off = { bg: "var(--paper)", fg: "var(--ink)" };
+    return {
+      results, count: results.length,
+      sortPrice: () => this.setState({ sort: "price" }),
+      sortRating: () => this.setState({ sort: "rating" }),
+      priceBg: (sort === "price" ? on : off).bg, priceFg: (sort === "price" ? on : off).fg,
+      ratingBg: (sort === "rating" ? on : off).bg, ratingFg: (sort === "rating" ? on : off).fg
+    };
+  }
+}
+</script>
+</body>
+</html>

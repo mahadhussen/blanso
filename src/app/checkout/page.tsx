@@ -72,55 +72,49 @@ export default async function CheckoutPage({
   const cover = property.images[0];
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <Link href={`/rooms/${property.slug}`} className="text-sm font-medium text-brand hover:text-brand-dark">
-        ← Tillbaka till boendet
+    <div className="b-page" style={{ paddingTop: "var(--s-5)" }}>
+      <Link href={`/rooms/${property.slug}`} className="b-label">
+        ← {property.title}
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold text-ink sm:text-3xl">Slutför din bokning</h1>
+      <h1 className="b-h1 mt-3">Slutför bokning</h1>
 
-      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_22rem]">
-        <div className="rounded-2xl border border-line bg-background p-6">
-          <CheckoutForm
-            propertyId={property.id}
-            checkIn={checkIn}
-            checkOut={checkOut}
-            guests={guests}
-          />
-        </div>
+      <div className="b-detail-grid mt-14">
+        <CheckoutForm
+          propertyId={property.id}
+          checkIn={checkIn}
+          checkOut={checkOut}
+          guests={guests}
+        />
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-2xl border border-line bg-background p-5 shadow-card">
-            <div className="flex gap-3">
-              <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-xl bg-panel">
-                {cover && (
-                  <Image src={cover} alt={property.title} fill sizes="96px" className="object-cover" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <h2 className="truncate font-semibold text-ink">{property.title}</h2>
-                <p className="truncate text-sm text-muted">
-                  {property.city}, {property.country}
-                </p>
-              </div>
+        <aside className="lg:sticky lg:self-start" style={{ top: 96 }}>
+          <div style={{ border: "1px solid var(--ink)", background: "var(--paper)" }}>
+            <div className="b-media" style={{ height: 180 }}>
+              {cover && <Image src={cover} alt={property.title} fill sizes="380px" />}
             </div>
+            <div style={{ padding: 24 }}>
+              <p className="b-label">
+                {property.city} · {property.country}
+              </p>
+              <h2 className="b-h3 mt-1">{property.title}</h2>
 
-            <dl className="mt-4 space-y-1 border-t border-line pt-4 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted">Incheckning</dt>
-                <dd className="text-ink">{checkIn}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted">Utcheckning</dt>
-                <dd className="text-ink">{checkOut}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted">Gäster</dt>
-                <dd className="text-ink">{guests}</dd>
-              </div>
-            </dl>
+              <dl className="mt-5 space-y-1" style={{ fontSize: 15 }}>
+                <div className="flex justify-between">
+                  <dt className="text-muted">Incheckning</dt>
+                  <dd>{checkIn}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted">Utcheckning</dt>
+                  <dd>{checkOut}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted">Gäster</dt>
+                  <dd>{guests}</dd>
+                </div>
+              </dl>
 
-            <div className="mt-4 border-t border-line pt-4">
-              <PriceBreakdown breakdown={breakdown} currency={property.currency} />
+              <div className="mt-6">
+                <PriceBreakdown breakdown={breakdown} currency={property.currency} />
+              </div>
             </div>
           </div>
         </aside>
@@ -131,12 +125,9 @@ export default async function CheckoutPage({
 
 function Problem({ message, href }: { message: string; href?: string }) {
   return (
-    <div className="mx-auto max-w-lg px-4 py-20 text-center">
-      <p className="text-lg font-semibold text-ink">{message}</p>
-      <Link
-        href={href ?? "/s"}
-        className="mt-4 inline-block rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-dark"
-      >
+    <div className="b-page py-24 text-center" style={{ maxWidth: 640 }}>
+      <p className="b-h3">{message}</p>
+      <Link href={href ?? "/s"} className="b-btn mt-8 inline-block">
         Tillbaka till sökningen
       </Link>
     </div>
