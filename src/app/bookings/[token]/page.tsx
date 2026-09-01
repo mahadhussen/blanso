@@ -80,7 +80,10 @@ export default async function BookingConfirmationPage({
         <dl className="mt-4 space-y-1 text-sm">
           <Row label="Gäst" value={booking.guestName} />
           <Row label="E-post" value={booking.guestEmail} />
-          <Row label="Betalstatus" value="Betald (sandbox)" />
+          <Row
+            label="Betalstatus"
+            value={confirmed ? "Betald (sandbox)" : "Återkallad (sandbox)"}
+          />
         </dl>
 
         <p className="mt-6 text-sm text-muted">

@@ -71,7 +71,7 @@ export async function createBookingAndPay(
     const intent = await provider.createPaymentIntent({
       amountCents: price.totalCents,
       currency: listing.currency,
-      bookingId: listing.id,
+      reference: listing.id,
     });
     const confirmation = await provider.confirmPaymentIntent({
       intentId: intent.id,
@@ -246,7 +246,16 @@ export async function cancelBookingAction(formData: FormData): Promise<void> {
   const hostId = await requireHost();
   if (!hostId) return;
   const id = String(formData.get("bookingId") ?? "");
-  await getStore().cancelBooking(id, hostId);
+  const store = getStore();
+  // Avbokning av en betald bokning ÅTERKALLAR alltid betalningen — en gäst får
+  // aldrig stå som debiterad för en avbokad vistelse (refund i riktig Stripe).
+  const booking = (await store.listBookingsByHost(hostId)).find((b) => b.id === id);
+  const cancelled = await store.cancelBooking(id, hostId);
+  if (cancelled && booking?.paymentRef) {
+    await getPaymentProvider()
+      .voidPaymentIntent({ intentId: booking.paymentRef })
+      .catch(() => undefined);
+  }
   redirect("/host/bookings");
 }
 

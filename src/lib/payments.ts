@@ -29,7 +29,9 @@ export interface PaymentProvider {
   createPaymentIntent(params: {
     amountCents: number;
     currency: string;
-    bookingId: string;
+    // Spårbar referens till det som betalas (listnings-id vid köpögonblicket —
+    // bokningen finns inte förrän efter lyckad betalning). Metadata i Stripe.
+    reference: string;
   }): Promise<PaymentIntent>;
   confirmPaymentIntent(params: {
     intentId: string;
@@ -74,7 +76,7 @@ class MockProvider implements PaymentProvider {
   async createPaymentIntent(params: {
     amountCents: number;
     currency: string;
-    bookingId: string;
+    reference: string;
   }): Promise<PaymentIntent> {
     const id = `mock_pi_${randomUUID().replace(/-/g, "").slice(0, 24)}`;
     return {
