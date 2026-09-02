@@ -10,7 +10,7 @@ image-slot{display:block;}
 @keyframes heroCycle{0%{opacity:0;transform:scale(1.08);}4%{opacity:1;}25%{opacity:1;transform:scale(1);}32%{opacity:0;transform:scale(1.02);}100%{opacity:0;}}
 [data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .9s ease,transform .9s ease;}
 [data-reveal].in{opacity:1;transform:none;}
-.carousel{position:relative;overflow:hidden;width:100%;aspect-ratio:3/4;cursor:pointer;}
+.carousel{position:relative;overflow:hidden;width:100%;aspect-ratio:5/4;cursor:pointer;}
 .carousel .track{display:flex;height:100%;transition:transform .5s cubic-bezier(.22,.61,.36,1);}
 .carousel .track img{width:100%;height:100%;flex:0 0 100%;object-fit:cover;}
 .carousel .dots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:6px;z-index:2;}
