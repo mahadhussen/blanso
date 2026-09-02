@@ -13,7 +13,7 @@ export function AddBlockForm({ listingId }: { listingId: string }) {
       <input type="hidden" name="listingId" value={listingId} />
       <label className="block">
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">
-          Från
+          From
         </span>
         <input
           type="date"
@@ -24,7 +24,7 @@ export function AddBlockForm({ listingId }: { listingId: string }) {
       </label>
       <label className="block">
         <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">
-          Till
+          To
         </span>
         <input
           type="date"

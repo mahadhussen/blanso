@@ -5,7 +5,7 @@ import { DEMO_HOST_ID } from "@/lib/store/memory";
 import { isHostAuthed } from "@/lib/hostAuth";
 import { AddBlockForm } from "@/components/AddBlockForm";
 
-export const metadata = { title: "Hantera boende" };
+export const metadata = { title: "Manage stay" };
 
 export default async function HostListingPage({
   params,
@@ -46,7 +46,7 @@ export default async function HostListingPage({
       </section>
 
       <section className="mt-6 rounded-2xl border border-line bg-background p-6">
-        <h2 className="text-lg font-semibold text-ink">Upptagna perioder</h2>
+        <h2 className="text-lg font-semibold text-ink">Occupied periods</h2>
         {ranges.length === 0 ? (
           <p className="mt-2 text-sm text-muted">No bookings or blocks yet.</p>
         ) : (
@@ -72,7 +72,7 @@ export default async function HostListingPage({
         {listingBookings.length > 0 && (
           <p className="mt-3 text-xs text-muted">
             {listingBookings.length} {listingBookings.length === 1 ? "booking" : "bookings"} —
-            hantera under{" "}
+            manage them under{" "}
             <Link href="/host/bookings" className="text-brand hover:underline">
               Bookings
             </Link>

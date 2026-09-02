@@ -26,7 +26,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Balaanso — Boende i Östafrika",
+    default: "Balaanso — Book stays in East Africa",
     template: "%s · Balaanso",
   },
   description:
