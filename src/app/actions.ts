@@ -6,6 +6,8 @@ import { priceForDates } from "@/lib/pricing";
 import { isAvailable } from "@/lib/availability";
 import { getPaymentProvider } from "@/lib/payments";
 import { bookingSchema, listingSchema } from "@/lib/validation";
+import { filesToUploads, getImageStore, MAX_PHOTOS, UploadError } from "@/lib/imageStore";
+import { randomBytes } from "crypto";
 import { validateStay } from "@/lib/dates";
 import { getStore } from "@/lib/store";
 import { DEMO_HOST_ID } from "@/lib/store/memory";
@@ -156,6 +158,44 @@ export async function createListing(
     return { status: "error", error: parsed.error.issues[0]?.message ?? "Invalid details" };
   }
   const d = parsed.data;
+
+  // Ladda upp värdens foton FÖRE bokningen skapas. Validering + uppladdning kan
+  // kasta; då returnerar vi felet och skapar ingen halvfärdig annons. Nyckeln är
+  // ett slumpprefix (inte slug), så uppladdningen är oberoende av att annonsen
+  // finns än. Filerna kommer som File i FormData (server action).
+  const photoFiles = formData
+    .getAll("photos")
+    .filter((f): f is File => f instanceof File && f.size > 0);
+  if (photoFiles.length > MAX_PHOTOS) {
+    return { status: "error", error: `Add at most ${MAX_PHOTOS} photos.` };
+  }
+
+  let images: string[] = [];
+  if (photoFiles.length > 0) {
+    try {
+      const uploads = await filesToUploads(photoFiles);
+      images = await getImageStore().uploadListingImages(
+        `lst-${randomBytes(8).toString("hex")}`,
+        uploads,
+      );
+    } catch (err) {
+      if (err instanceof UploadError) return { status: "error", error: err.message };
+      throw err;
+    }
+  }
+
+  // Ingen lagring konfigurerad (demo) eller inga foton: deterministiska
+  // platshållarbilder så annonssidan aldrig står tom.
+  if (images.length === 0) {
+    const seed =
+      `${d.title}-${d.city}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") ||
+      "stay";
+    images = Array.from(
+      { length: 4 },
+      (_, i) => `https://picsum.photos/seed/blanso-${seed}-${i + 1}/1200/800`,
+    );
+  }
+
   const store = getStore();
   const host = await store.getHostById(hostId);
 
@@ -173,19 +213,12 @@ export async function createListing(
     bedrooms: d.bedrooms,
     beds: d.beds,
     baths: d.baths,
-    images: [],
+    images,
     amenities: d.amenities
       ? d.amenities.split(",").map((a) => a.trim()).filter(Boolean)
       : [],
   });
 
-  // Deterministiska platshållarbilder tills värden laddar upp egna.
-  await store.updateListing(listing.id, hostId, {
-    images: Array.from(
-      { length: 4 },
-      (_, i) => `https://picsum.photos/seed/blanso-${listing.slug}-${i + 1}/1200/800`,
-    ),
-  });
   // Publicera direkt — utkast-läget finns för framtida redigeringsflöde.
   await store.setListingStatus(listing.id, hostId, "published");
 

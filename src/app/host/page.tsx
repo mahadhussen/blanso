@@ -47,7 +47,7 @@ export default async function HostPage() {
         <div className="rounded-2xl border border-line bg-background p-6 shadow-card lg:self-start">
           <h2 className="text-lg font-semibold text-ink">List a room</h2>
           <p className="mb-4 mt-1 text-sm text-muted">
-            Published immediately and bookable. Photos are generated in the demo.
+            Published immediately and bookable. Add your own photos, or we use placeholders.
           </p>
           <HostListingForm />
         </div>

@@ -10,7 +10,7 @@ export function HostListingForm() {
   const [state, formAction, pending] = useActionState(createListing, initial);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} encType="multipart/form-data" className="space-y-5">
       <Field name="title" label="Title" placeholder="Bright apartment near the beach" required />
       <div className="grid grid-cols-2 gap-4">
         <Field name="city" label="City" placeholder="Mogadishu" required />
@@ -38,6 +38,21 @@ export function HostListingForm() {
         label="Amenities (comma-separated)"
         placeholder="Wi-Fi, Kitchen, Parking"
       />
+
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium text-ink">Photos</span>
+        <input
+          name="photos"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif"
+          multiple
+          className="w-full rounded-xl border border-line bg-background px-3 py-2.5 text-sm text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-ink file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-ink-2"
+        />
+        <span className="mt-1 block text-xs text-muted">
+          Up to 8 photos, JPG/PNG/WebP, max 5 MB each. Leave empty and we add
+          placeholder photos for now.
+        </span>
+      </label>
 
       {state.status === "error" && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state.error}</p>
