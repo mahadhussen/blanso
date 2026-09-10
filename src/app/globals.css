@@ -224,3 +224,52 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
 .b-searchbar > * { border-right: 1px solid var(--hairline); }
 .b-searchbar > *:last-child { border-right: none; }
 @media (max-width: 760px) { .b-searchbar { grid-template-columns: 1fr 1fr; } .b-searchbar > * { border-bottom: 1px solid var(--hairline); } }
+
+/* ---- Mobilanpassning av landningssidan ------------------------------------
+   Desktop 1:1-kopian är orörd; allt nedan gäller ENDAST under 760px. Tokens
+   redefinieras på :root så inline var()-referenser i landningens markup krymper
+   av sig själva (sidopadding, display- och h2-storlek). */
+@media (max-width: 760px) {
+  :root {
+    --page-pad: 20px;
+    --text-display: 40px;
+    --text-h2: 30px;
+  }
+}
+
+/* Toppmenyn: rad på desktop, hamburgare + fällbar panel på mobil. */
+.b-nav-toggle { display: none; }
+@media (max-width: 760px) {
+  .b-site-header { padding-left: 20px !important; padding-right: 20px !important; }
+  .b-wordmark { font-size: 22px !important; letter-spacing: 4px !important; }
+  .b-nav-desktop { display: none !important; }
+  .b-nav-toggle {
+    display: flex; flex-direction: column; justify-content: center; gap: 5px;
+    width: 40px; height: 40px; padding: 0; border: 0; background: transparent; cursor: pointer;
+  }
+  .b-nav-toggle span { display: block; width: 22px; height: 2px; background: var(--ink); margin: 0 auto; }
+  .b-nav-mobile {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 39;
+    display: flex; flex-direction: column;
+    background: var(--paper); border-bottom: 1px solid var(--hairline);
+    padding: 4px 20px 12px;
+  }
+  .b-nav-mobile a { padding: 15px 2px; border-bottom: 1px solid var(--hairline); }
+  .b-nav-mobile a:last-child { border-bottom: none; }
+}
+@media (min-width: 761px) { .b-nav-mobile { display: none; } }
+
+/* Hjältesökfält, boendekort och värdsektion: fasta desktop-kolumner, staplar på mobil. */
+.b-hero-search { grid-template-columns: 1.3fr 1fr 1fr 1fr auto; }
+@media (max-width: 760px) {
+  .b-hero-search { grid-template-columns: 1fr; }
+  .b-hero-search > * { border-right: none !important; border-bottom: 1px solid var(--hairline); }
+  .b-hero-search > *:last-child { border-bottom: none; padding: 18px 20px !important; }
+}
+.b-stay-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 900px) { .b-stay-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .b-stay-grid { grid-template-columns: 1fr; } }
+.b-owner-grid { grid-template-columns: 1.1fr 1fr; }
+@media (max-width: 760px) { .b-owner-grid { grid-template-columns: 1fr; gap: 32px !important; } }
+.b-owner-h2 { font-size: 44px; }
+@media (max-width: 760px) { .b-owner-h2 { font-size: 30px; } }

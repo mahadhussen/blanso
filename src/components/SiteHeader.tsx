@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { HeaderNav } from "./HeaderNav";
 
 // Header — 1:1 från Balaanso Landing.html (84px, hairline, B-märke + alaanso).
+// Desktop-utseendet är orört; menyn faller ihop till hamburgare under 760px
+// (se .b-nav-* i globals.css + HeaderNav).
 export function SiteHeader() {
   return (
     <header
-      className="sticky top-0 z-40"
+      className="b-site-header sticky top-0 z-40"
       style={{
         height: 84,
         borderBottom: "1px solid var(--hairline)",
@@ -18,6 +21,7 @@ export function SiteHeader() {
       <Link href="/" style={{ display: "flex", alignItems: "center", gap: 12, color: "var(--ink)" }}>
         <span className="b-mark">B</span>
         <span
+          className="b-wordmark"
           style={{
             fontFamily: "var(--font-display)",
             fontWeight: 400,
@@ -29,12 +33,7 @@ export function SiteHeader() {
           alaanso
         </span>
       </Link>
-      <div style={{ display: "flex", gap: 40 }} className="b-nav">
-        <Link href="/s" style={{ color: "var(--ink)" }}>Stays</Link>
-        <Link href="/#map" style={{ color: "var(--ink)" }}>Destinations</Link>
-        <Link href="/host" style={{ color: "var(--ink)" }}>List your property</Link>
-        <Link href="/host/login" style={{ color: "var(--ink)" }}>Sign in</Link>
-      </div>
+      <HeaderNav />
     </header>
   );
 }

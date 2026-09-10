@@ -23,7 +23,7 @@ const HERO = `
   </div>
 </div>
 <div data-reveal style="padding:var(--s-6) var(--page-pad);border-bottom:1px solid var(--hairline);">
-  <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr auto;gap:0;border:1px solid var(--ink);">
+  <div class="b-hero-search" style="display:grid;gap:0;border:1px solid var(--ink);">
     <div style="padding:16px 20px;border-right:1px solid var(--hairline);"><div style="font-family:var(--font-label);font-size:var(--text-label);font-weight:700;letter-spacing:var(--ls-label-tight);text-transform:uppercase;color:var(--muted);">Destination</div><div style="font-size:18px;margin-top:6px;">Where to?</div></div>
     <div style="padding:16px 20px;border-right:1px solid var(--hairline);"><div style="font-family:var(--font-label);font-size:var(--text-label);font-weight:700;letter-spacing:var(--ls-label-tight);text-transform:uppercase;color:var(--muted);">Check-in</div><div style="font-size:18px;margin-top:6px;color:var(--faint);">Date</div></div>
     <div style="padding:16px 20px;border-right:1px solid var(--hairline);"><div style="font-family:var(--font-label);font-size:var(--text-label);font-weight:700;letter-spacing:var(--ls-label-tight);text-transform:uppercase;color:var(--muted);">Check-out</div><div style="font-size:18px;margin-top:6px;color:var(--faint);">Date</div></div>
@@ -106,7 +106,7 @@ const SECTIONS = `
   <span style="align-self:center;color:var(--muted);margin-right:14px;">View</span>
   <button class="count-opt on" data-n="3">3</button><button class="count-opt" data-n="6">6</button><button class="count-opt" data-n="9">9</button>
 </div>
-<div data-reveal style="padding:0 var(--page-pad) 64px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 32px;">${CARDS.map(cardHtml).join("")}</div>
+<div data-reveal class="b-stay-grid" style="padding:0 var(--page-pad) 64px;display:grid;gap:36px 32px;">${CARDS.map(cardHtml).join("")}</div>
 <div data-reveal style="border-top:1px solid var(--hairline);padding:var(--s-7) var(--page-pad) var(--s-4);">
   <div style="font-family:var(--font-label);font-size:var(--text-label);font-weight:700;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--muted);">Trending destinations</div>
   <h2 style="font-family:var(--font-display);font-weight:300;font-size:var(--text-h2);letter-spacing:1px;margin:14px 0 0;">Where travellers are booking now</h2>
@@ -120,10 +120,10 @@ const SECTIONS = `
   <div id="map" style="height:520px;border:1px solid var(--hairline);"></div>
 </div>
 <div data-reveal style="border-top:1px solid var(--hairline);padding:var(--s-8) var(--page-pad);">
-  <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;">
+  <div class="b-owner-grid" style="display:grid;gap:48px;align-items:center;">
     <div>
       <div style="font-family:var(--font-label);font-size:var(--text-label);font-weight:700;letter-spacing:var(--ls-label);text-transform:uppercase;color:var(--muted);">For hotel owners</div>
-      <h2 style="font-family:var(--font-display);font-weight:300;font-size:44px;line-height:1.1;margin:14px 0 0;">Own a hotel in Somalia or East Africa? List it on Balaanso.</h2>
+      <h2 class="b-owner-h2" style="font-family:var(--font-display);font-weight:300;line-height:1.1;margin:14px 0 0;">Own a hotel in Somalia or East Africa? List it on Balaanso.</h2>
       <p style="font-size:var(--text-body);line-height:1.6;color:var(--ink-2);margin:18px 0 26px;max-width:46ch;">Create your listing, set your own prices and availability, and reach guests booking across the region. No setup fees — you pay only per completed booking.</p>
       <a href="/host" style="display:inline-block;background:var(--ink);color:var(--paper);font-family:var(--font-label);font-size:var(--text-label);font-weight:700;letter-spacing:var(--ls-label);text-transform:uppercase;padding:16px 36px;">List your property</a>
     </div>
