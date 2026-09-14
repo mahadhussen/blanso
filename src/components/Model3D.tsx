@@ -51,9 +51,12 @@ export function Model3D({ src, alt }: { src: string; alt: string }) {
     "rotation-per-second": "18deg",
     "interaction-prompt": "none",
     "shadow-intensity": "1",
-    "camera-orbit": "35deg 68deg 12m",
+    "camera-orbit": "20deg 62deg 135%",
+    "min-camera-orbit": "auto auto 100%",
+    "max-camera-orbit": "auto auto 220%",
+    "field-of-view": "42deg",
     "touch-action": "pan-y",
-    exposure: "1.05",
+    exposure: "1.15",
     style: { width: "100%", height: "100%", backgroundColor: "var(--wash)" },
   });
 }

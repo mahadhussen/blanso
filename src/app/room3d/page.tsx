@@ -21,7 +21,7 @@ export default function Room3DPage() {
           color: "var(--muted)",
         }}
       >
-        3D room model · prototype
+        3D room model · Damal Hargeisa
       </div>
       <h1
         className="b-owner-h2"
@@ -43,12 +43,13 @@ export default function Room3DPage() {
           maxWidth: "62ch",
         }}
       >
-        Drag to rotate, scroll to zoom. This is the viewer side of photo-to-3D,
-        running on Google model-viewer (open source), entirely in the browser —
-        no server, no paid service. The room here is a sample model, not a real
-        reconstruction: building a 3D model from a host&rsquo;s photos needs GPU
-        compute and is a separate, paid step we switch on later. When we do, the
-        result drops straight into this viewer.
+        Drag to rotate, scroll to zoom. A 3D model of the Damal Hargeisa room —
+        the tall dark headboard, wardrobe, olive curtains, the chairs by the
+        window and the terracotta tile floor — hand-built from the photos, the
+        way an interior 3D artist works. Runs on Google model-viewer (open
+        source), entirely in the browser: no server, no paid service, no GPU.
+        This is a built model, not a laser scan; a fully automatic photo-to-3D
+        pipeline is the separate step that needs GPU compute.
       </p>
 
       <div
@@ -60,7 +61,7 @@ export default function Room3DPage() {
           background: "var(--wash)",
         }}
       >
-        <Model3D src="/demo/sample-room.glb" alt="Sample 3D room model" />
+        <Model3D src="/demo/damal-room.glb" alt="3D model of the Damal Hargeisa room" />
       </div>
 
       <div style={{ marginTop: "var(--s-5)", display: "flex", gap: 28, flexWrap: "wrap" }}>
