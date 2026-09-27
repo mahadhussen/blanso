@@ -1,8 +1,9 @@
-// Seedar Balaanso med Blansos 12 startboenden ur src/lib/listings.ts (samma
-// sanningskälla som MemoryStore — aldrig en parallell kopia i SQL).
-// Idempotent: upsert på slug. Kör: npx tsx scripts/seed-supabase.mts
+// Seedar Balaanso med Blansos 12 startboenden OCH deras rumstyper ur
+// src/lib/listings.ts (samma sanningskälla som MemoryStore — aldrig en
+// parallell kopia i SQL). Idempotent. Kör EFTER migrationen
+// 20260927120000_room_types.sql: npx tsx scripts/seed-supabase.mts
 import { readFileSync } from "fs";
-import { LISTINGS } from "../src/lib/listings";
+import { LISTINGS, ROOM_TYPES } from "../src/lib/listings";
 import { createServerClient } from "../src/lib/store/supabase";
 
 // Läs .env själv (ingen dotenv-dep): KEY="value"-rader.
@@ -55,7 +56,67 @@ if (error) {
   console.error("Seed misslyckades:", error.message);
   process.exit(1);
 }
+// ---- Rumstyper ----------------------------------------------------------------
+// Migrationens backfill gav varje boende en härledd "Standard Room" med id
+// rt-<boende>. Seedens första typ per boende har SAMMA id: den härledda typen
+// ersätts (uppdateras) med den riktiga — men bara så länge den fortfarande är
+// orörd (namnet "Standard Room"), så en värds egna ändringar aldrig skrivs över.
+// Övriga typer infogas om de saknas. SEED_OVERWRITE=1 skriver över allt.
+const DERIVED_NAME = "Standard Room";
+const { data: existing, error: rtErr } = await client
+  .from("room_types")
+  .select("id, name")
+  .in("id", ROOM_TYPES.map((r) => r.id));
+if (rtErr) {
+  console.error("Seed av rumstyper misslyckades (är migrationen körd?):", rtErr.message);
+  process.exit(1);
+}
+const byId = new Map((existing ?? []).map((r) => [String(r.id), String(r.name)]));
+let inserted = 0;
+let replaced = 0;
+let kept = 0;
+for (const r of ROOM_TYPES) {
+  const row = {
+    id: r.id,
+    listing_id: r.listingId,
+    name: r.name,
+    size_sqm: r.sizeSqm,
+    bed_config: r.bedConfig,
+    max_guests: r.maxGuests,
+    units: r.units,
+    nightly_price_cents: r.nightlyPriceCents,
+    images: r.images,
+    sort_order: r.sortOrder,
+    updated_at: new Date().toISOString(),
+  };
+  const cur = byId.get(r.id);
+  if (cur === undefined) {
+    const { error: e } = await client.from("room_types").insert(row);
+    if (e) {
+      console.error(`Rumstyp ${r.id}:`, e.message);
+      process.exit(1);
+    }
+    inserted++;
+  } else if (overwrite || cur === DERIVED_NAME) {
+    const { error: e } = await client.from("room_types").update(row).eq("id", r.id);
+    if (e) {
+      console.error(`Rumstyp ${r.id}:`, e.message);
+      process.exit(1);
+    }
+    replaced++;
+  } else {
+    kept++;
+  }
+}
+
 const { count } = await client
   .from("listings")
   .select("*", { count: "exact", head: true });
-console.log(`Klart: ${count} boenden i Balaanso.`);
+const { count: rtCount } = await client
+  .from("room_types")
+  .select("*", { count: "exact", head: true })
+  .is("archived_at", null);
+console.log(
+  `Klart: ${count} boenden, ${rtCount} aktiva rumstyper i Balaanso ` +
+    `(rumstyper: ${inserted} nya, ${replaced} ersatta härledda, ${kept} orörda värdändringar).`,
+);

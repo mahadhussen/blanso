@@ -255,3 +255,119 @@ export const LISTINGS = seeds.map((s) => ({
   currency: "USD",
   images: images(s.slug),
 }));
+
+// ---- Rumstyper -------------------------------------------------------------
+// Seed-katalogens rumstyper (booking.com-modellen: rumstyp × antal rum). Samma
+// sanningskälla för MemoryStore och scripts/seed-supabase.mts. Billigaste typen
+// har exakt boendets listpris, så landningssidans "From $X" förblir sann.
+// Första typen per boende får id `rt-<boendets id>` — samma id som migrationens
+// härledda standardtyp, så seeden ersätter den i stället för att lägga en till.
+
+// Rumsfoton ur designfacit/landningen (Unsplash, redan i drift på sajten).
+const ROOM_PHOTO = {
+  standard: "photo-1566665797739-1674de7a421a",
+  deluxe: "photo-1590490360182-c33d57733427",
+  suite: "photo-1611892440504-42a792e24d32",
+  family: "photo-1582719478250-c89cae4dc85b",
+  apartment: "photo-1522708323590-d24dbb6b0267",
+  hotel: "photo-1582719508461-905c673771fd",
+} as const;
+type PhotoKey = keyof typeof ROOM_PHOTO;
+const roomPhoto = (k: PhotoKey) =>
+  `https://images.unsplash.com/${ROOM_PHOTO[k]}?auto=format&fit=crop&w=900&q=70`;
+
+interface RoomSeed {
+  key: string;
+  name: string;
+  sizeSqm: number;
+  bedConfig: string;
+  maxGuests: number;
+  units: number;
+  price: number; // USD per natt
+  photo: PhotoKey;
+}
+
+const R = (key: string, name: string, sizeSqm: number, bedConfig: string, maxGuests: number, units: number, price: number, photo: PhotoKey): RoomSeed => ({
+  key, name, sizeSqm, bedConfig, maxGuests, units, price, photo,
+});
+
+const roomSeeds: Record<string, RoomSeed[]> = {
+  "zanzibar-stonetown-villa": [
+    R("standard", "Standard Double Room", 18, "1 queen bed", 2, 4, 120, "standard"),
+    R("deluxe", "Deluxe Sea View Room", 26, "1 king bed", 2, 3, 155, "deluxe"),
+    R("family", "Family Room", 34, "1 queen bed and 2 single beds", 4, 2, 195, "family"),
+    R("suite", "Rooftop Suite", 45, "1 king bed and 1 sofa bed", 3, 1, 240, "suite"),
+  ],
+  "lido-beach-suite-mogadishu": [
+    R("courtyard", "Courtyard Double Room", 22, "1 queen bed", 2, 4, 85, "standard"),
+    R("suite", "Sea View Suite", 48, "1 king bed", 2, 3, 115, "suite"),
+    R("family", "Family Suite", 72, "1 king bed and 2 single beds", 4, 2, 160, "family"),
+  ],
+  "nairobi-westlands-loft": [
+    R("studio", "Studio Loft", 28, "1 queen bed", 2, 6, 95, "apartment"),
+    R("deluxe", "Deluxe Loft", 38, "1 king bed", 2, 4, 125, "deluxe"),
+    R("penthouse", "Penthouse Loft", 60, "1 king bed and 1 sofa bed", 3, 1, 210, "suite"),
+  ],
+  "mombasa-oldtown-riad": [
+    R("standard", "Standard Double Room", 16, "1 double bed", 2, 5, 75, "standard"),
+    R("deluxe", "Deluxe Courtyard Room", 24, "1 king bed", 2, 3, 98, "deluxe"),
+    R("family", "Family Room", 32, "1 double bed and 2 single beds", 4, 2, 130, "family"),
+  ],
+  "kampala-kololo-house": [
+    R("garden", "Garden Double Room", 20, "1 queen bed", 2, 6, 65, "standard"),
+    R("twin", "Deluxe Twin Room", 24, "2 single beds", 2, 4, 80, "deluxe"),
+    R("family", "Family Room", 36, "1 queen bed and 2 single beds", 4, 2, 120, "family"),
+  ],
+  "kigali-nyarutarama-flat": [
+    R("one-bed", "One-Bedroom Apartment", 45, "1 queen bed", 2, 5, 70, "apartment"),
+    R("two-bed", "Two-Bedroom Apartment", 78, "1 king bed and 2 single beds", 4, 2, 125, "family"),
+  ],
+  "hargeisa-city-apartment": [
+    R("single", "Standard Single Room", 12, "1 single bed", 1, 6, 45, "standard"),
+    R("double", "Standard Double Room", 16, "1 double bed", 2, 8, 55, "hotel"),
+    R("deluxe", "Deluxe Room", 22, "1 queen bed and 1 single bed", 3, 3, 75, "deluxe"),
+  ],
+  "dar-masaki-apartment": [
+    R("garden", "Garden View Room", 24, "1 queen bed", 2, 4, 110, "standard"),
+    R("ocean", "Ocean View Room", 28, "1 king bed", 2, 4, 140, "deluxe"),
+    R("suite", "Beach Suite", 52, "1 king bed and 1 sofa bed", 4, 2, 230, "suite"),
+  ],
+  "addis-bole-residence": [
+    R("standard", "Standard Double Room", 18, "1 queen bed", 2, 8, 60, "standard"),
+    R("deluxe", "Deluxe King Room", 24, "1 king bed", 2, 6, 78, "deluxe"),
+    R("family", "Family Room", 34, "1 queen bed and 2 single beds", 4, 2, 105, "family"),
+    R("suite", "Terrace Suite", 40, "1 king bed and 1 sofa bed", 3, 2, 120, "suite"),
+  ],
+  "bosaso-harbor-view": [
+    R("standard", "Standard Double Room", 16, "1 double bed", 2, 6, 60, "standard"),
+    R("harbour", "Harbour View Room", 22, "1 queen bed", 2, 4, 75, "deluxe"),
+    R("family", "Family Room", 30, "1 double bed and 2 single beds", 4, 2, 110, "family"),
+  ],
+  "djibouti-marina-studio": [
+    R("studio", "Marina Studio", 26, "1 queen bed", 2, 6, 70, "apartment"),
+    R("deluxe", "Deluxe Marina Studio", 32, "1 king bed", 2, 3, 92, "deluxe"),
+  ],
+  "kismayo-garden-rooms": [
+    R("double", "Garden Double Room", 16, "1 double bed", 2, 6, 45, "standard"),
+    R("twin", "Garden Twin Room", 18, "2 single beds", 2, 4, 50, "hotel"),
+    R("triple", "Triple Room", 24, "1 double bed and 1 single bed", 3, 2, 65, "family"),
+  ],
+};
+
+// Id för en boendes härledda standardrumstyp (samma i SQL-migrationens backfill).
+export const defaultRoomTypeId = (listingId: string) => `rt-${listingId}`;
+
+export const ROOM_TYPES = LISTINGS.flatMap((l) =>
+  (roomSeeds[l.id] ?? []).map((r, i) => ({
+    id: i === 0 ? defaultRoomTypeId(l.id) : `rt-${l.id}-${r.key}`,
+    listingId: l.id,
+    name: r.name,
+    sizeSqm: r.sizeSqm,
+    bedConfig: r.bedConfig,
+    maxGuests: r.maxGuests,
+    units: r.units,
+    nightlyPriceCents: r.price * 100,
+    images: [roomPhoto(r.photo)],
+    sortOrder: i,
+  })),
+);

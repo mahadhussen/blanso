@@ -6,14 +6,31 @@ import type {
   Listing,
   NewBooking,
   NewListing,
+  NewRoomType,
+  RoomType,
 } from "../domain";
-import type { CreateBookingResult, DataStore } from "./types";
-import { isAvailable } from "../availability";
-import { LISTINGS } from "../listings";
+import type {
+  CreateBookingResult,
+  DataStore,
+  InventoryRow,
+  RoomAvailability,
+  RoomTypeChangeResult,
+} from "./types";
+import {
+  availableForStay,
+  checkRoomRequest,
+  dateRange,
+  inventoryForRoomType,
+  peakBookedFrom,
+  type InventoryBlock,
+  type InventoryBooking,
+} from "../inventory";
+import { isoDate, todayUTC } from "../dates";
+import { LISTINGS, ROOM_TYPES } from "../listings";
 
-// In-memory DataStore. Blansos lagring tills Supabase pluggas in — samma
-// interface, så bytet är EN fil. Persisterar per serverprocess (demo).
-// globalThis-förankring så Next.js dev-omladdningar inte nollställer datan.
+// In-memory DataStore. Demo- och testlagret — samma kontrakt som SupabaseStore.
+// Persisterar per serverprocess. globalThis-förankring så Next.js
+// dev-omladdningar inte nollställer datan.
 
 const DEMO_HOST: Host = {
   id: "host-demo",
@@ -35,6 +52,7 @@ function slugify(input: string): string {
 interface MemoryState {
   hosts: Map<string, Host>;
   listings: Map<string, Listing>;
+  roomTypes: Map<string, RoomType>;
   bookings: Map<string, Booking>;
   blocks: Map<string, AvailabilityBlock>;
 }
@@ -51,9 +69,14 @@ function seedState(): MemoryState {
       updatedAt: now,
     });
   }
+  const roomTypes = new Map<string, RoomType>();
+  for (const r of ROOM_TYPES) {
+    roomTypes.set(r.id, { ...r, archivedAt: null, createdAt: now, updatedAt: now });
+  }
   return {
     hosts: new Map([[DEMO_HOST.id, DEMO_HOST]]),
     listings,
+    roomTypes,
     bookings: new Map(),
     blocks: new Map(),
   };
@@ -69,6 +92,41 @@ function state(): MemoryState {
 // Endast för tester: nollställ lagret.
 export function __resetMemoryStore(): void {
   g.__blansoStore = seedState();
+}
+
+function byOrder(a: RoomType, b: RoomType): number {
+  return a.sortOrder - b.sortOrder || (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0) || (a.id < b.id ? -1 : 1);
+}
+
+function activeRoomTypes(s: MemoryState, listingId: string): RoomType[] {
+  return [...s.roomTypes.values()]
+    .filter((r) => r.listingId === listingId && r.archivedAt === null)
+    .sort(byOrder);
+}
+
+function inventoryBookings(s: MemoryState): InventoryBooking[] {
+  return [...s.bookings.values()].map((b) => ({
+    roomTypeId: b.roomTypeId,
+    checkIn: b.checkIn,
+    checkOut: b.checkOut,
+    rooms: b.rooms,
+    status: b.status,
+  }));
+}
+
+function inventoryBlocks(s: MemoryState, listingId: string): InventoryBlock[] {
+  return [...s.blocks.values()]
+    .filter((bl) => bl.listingId === listingId)
+    .map((bl) => ({ roomTypeId: bl.roomTypeId, checkIn: bl.checkIn, checkOut: bl.checkOut }));
+}
+
+// Äger hostId rumstypens boende? Returnerar typen, annars null.
+function ownedRoomType(s: MemoryState, id: string, hostId: string): RoomType | null {
+  const rt = s.roomTypes.get(id);
+  if (!rt || rt.archivedAt !== null) return null;
+  const listing = s.listings.get(rt.listingId);
+  if (!listing || listing.hostId !== hostId) return null;
+  return rt;
 }
 
 export class MemoryStore implements DataStore {
@@ -145,8 +203,6 @@ export class MemoryStore implements DataStore {
     hostId: string,
     status: Listing["status"],
   ): Promise<Listing | null> {
-    // En enda skrivning — samma enstegskonvention som createBooking, så mönstret
-    // inte blir två separata rundresor i en framtida SupabaseStore.
     const s = state();
     const cur = s.listings.get(id);
     if (!cur || cur.hostId !== hostId) return null;
@@ -155,30 +211,134 @@ export class MemoryStore implements DataStore {
     return next;
   }
 
-  async getBlockedRanges(
-    listingId: string,
-  ): Promise<{ checkIn: string; checkOut: string; source: "booking" | "block" }[]> {
+  // ---- Rumstyper ----------------------------------------------------------
+
+  async listRoomTypes(listingId: string): Promise<RoomType[]> {
+    return activeRoomTypes(state(), listingId);
+  }
+
+  async listRoomTypesForListings(listingIds: string[]): Promise<RoomType[]> {
     const s = state();
-    const fromBookings = [...s.bookings.values()]
-      .filter((b) => b.listingId === listingId && b.status !== "cancelled")
-      .map((b) => ({ checkIn: b.checkIn, checkOut: b.checkOut, source: "booking" as const }));
-    const fromBlocks = [...s.blocks.values()]
+    return listingIds.flatMap((id) => activeRoomTypes(s, id));
+  }
+
+  async getRoomType(id: string): Promise<RoomType | null> {
+    return state().roomTypes.get(id) ?? null;
+  }
+
+  async createRoomType(listingId: string, hostId: string, input: NewRoomType): Promise<RoomType | null> {
+    const s = state();
+    const listing = s.listings.get(listingId);
+    if (!listing || listing.hostId !== hostId) return null;
+    const now = new Date().toISOString();
+    const rt: RoomType = {
+      ...input,
+      id: `rt_${randomUUID().slice(0, 12)}`,
+      listingId,
+      archivedAt: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    s.roomTypes.set(rt.id, rt);
+    return rt;
+  }
+
+  async updateRoomType(id: string, hostId: string, patch: Partial<NewRoomType>): Promise<RoomTypeChangeResult> {
+    const s = state();
+    const cur = ownedRoomType(s, id, hostId);
+    if (!cur) return { ok: false, error: "NOT_FOUND" };
+    if (patch.units !== undefined && patch.units < cur.units) {
+      const peak = peakBookedFrom(id, isoDate(todayUTC()), inventoryBookings(s));
+      if (patch.units < peak) return { ok: false, error: "UNITS_BELOW_BOOKED", detail: peak };
+    }
+    const next: RoomType = {
+      ...cur,
+      ...patch,
+      id: cur.id,
+      listingId: cur.listingId,
+      archivedAt: null,
+      createdAt: cur.createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    s.roomTypes.set(id, next);
+    return { ok: true, roomType: next };
+  }
+
+  async deleteRoomType(id: string, hostId: string): Promise<RoomTypeChangeResult> {
+    const s = state();
+    const cur = ownedRoomType(s, id, hostId);
+    if (!cur) return { ok: false, error: "NOT_FOUND" };
+    const today = isoDate(todayUTC());
+    const future = [...s.bookings.values()].filter(
+      (b) => b.roomTypeId === id && b.status === "confirmed" && b.checkOut > today,
+    ).length;
+    if (future > 0) return { ok: false, error: "HAS_FUTURE_BOOKINGS", detail: future };
+    const now = new Date().toISOString();
+    const archived: RoomType = { ...cur, archivedAt: now, updatedAt: now };
+    s.roomTypes.set(id, archived);
+    return { ok: true, roomType: archived };
+  }
+
+  // ---- Lager ----------------------------------------------------------------
+
+  async getRoomAvailability(listingId: string, checkIn: string, checkOut: string): Promise<RoomAvailability[]> {
+    return (await this.getRoomAvailabilityForListings([listingId], checkIn, checkOut))[listingId] ?? [];
+  }
+
+  async getRoomAvailabilityForListings(
+    listingIds: string[],
+    checkIn: string,
+    checkOut: string,
+  ): Promise<Record<string, RoomAvailability[]>> {
+    const s = state();
+    const bookings = inventoryBookings(s);
+    const out: Record<string, RoomAvailability[]> = {};
+    for (const listingId of listingIds) {
+      const blocks = inventoryBlocks(s, listingId);
+      out[listingId] = activeRoomTypes(s, listingId).map((roomType) => ({
+        roomType,
+        ...availableForStay(roomType, checkIn, checkOut, bookings, blocks),
+      }));
+    }
+    return out;
+  }
+
+  async getInventoryCalendar(listingId: string, from: string, days: number): Promise<InventoryRow[]> {
+    const s = state();
+    const nights = dateRange(from, days);
+    const bookings = inventoryBookings(s);
+    const blocks = inventoryBlocks(s, listingId);
+    return activeRoomTypes(s, listingId).map((roomType) => ({
+      roomType,
+      days: inventoryForRoomType(roomType, nights, bookings, blocks),
+    }));
+  }
+
+  // ---- Stängningar ----------------------------------------------------------
+
+  async listAvailabilityBlocks(listingId: string): Promise<AvailabilityBlock[]> {
+    return [...state().blocks.values()]
       .filter((bl) => bl.listingId === listingId)
-      .map((bl) => ({ checkIn: bl.checkIn, checkOut: bl.checkOut, source: "block" as const }));
-    return [...fromBookings, ...fromBlocks];
+      .sort((a, b) => (a.checkIn < b.checkIn ? -1 : a.checkIn > b.checkIn ? 1 : 0));
   }
 
   async addAvailabilityBlock(
     listingId: string,
     hostId: string,
-    block: { checkIn: string; checkOut: string; note?: string },
+    block: { checkIn: string; checkOut: string; note?: string; roomTypeId?: string | null },
   ): Promise<AvailabilityBlock | null> {
     const s = state();
     const listing = s.listings.get(listingId);
     if (!listing || listing.hostId !== hostId) return null;
+    const roomTypeId = block.roomTypeId ?? null;
+    if (roomTypeId !== null) {
+      const rt = s.roomTypes.get(roomTypeId);
+      if (!rt || rt.listingId !== listingId || rt.archivedAt !== null) return null;
+    }
     const item: AvailabilityBlock = {
       id: `blk_${randomUUID().slice(0, 12)}`,
       listingId,
+      roomTypeId,
       checkIn: block.checkIn,
       checkOut: block.checkOut,
       note: block.note,
@@ -197,29 +357,34 @@ export class MemoryStore implements DataStore {
     return s.blocks.delete(id);
   }
 
+  // ---- Bokningar ------------------------------------------------------------
+
   async createBooking(
     input: NewBooking & { paymentRef: string },
   ): Promise<CreateBookingResult> {
     const s = state();
+    // Samma ordning på kontrollerna som SQL-funktionen create_booking.
     const listing = s.listings.get(input.listingId);
     if (!listing) return { ok: false, error: "LISTING_NOT_FOUND" };
     if (listing.status !== "published") return { ok: false, error: "LISTING_NOT_PUBLISHED" };
-    // Vakten bor i kontraktet, inte bara hos anroparen: varje framtida väg in
-    // (API, annan klient, SupabaseStore) får samma regel.
-    if (input.guests > listing.maxGuests) return { ok: false, error: "TOO_MANY_GUESTS" };
-
-    // Atomisk i denna process: kolla + skriv utan await emellan.
-    const blocked = [
-      ...[...s.bookings.values()]
-        .filter((b) => b.listingId === input.listingId && b.status !== "cancelled")
-        .map((b) => ({ checkIn: b.checkIn, checkOut: b.checkOut })),
-      ...[...s.blocks.values()]
-        .filter((bl) => bl.listingId === input.listingId)
-        .map((bl) => ({ checkIn: bl.checkIn, checkOut: bl.checkOut })),
-    ];
-    if (!isAvailable({ checkIn: input.checkIn, checkOut: input.checkOut }, blocked)) {
-      return { ok: false, error: "UNAVAILABLE" };
+    const rt = s.roomTypes.get(input.roomTypeId);
+    if (!rt || rt.listingId !== input.listingId || rt.archivedAt !== null) {
+      return { ok: false, error: "ROOM_TYPE_NOT_FOUND" };
     }
+    if (!Number.isInteger(input.rooms) || input.rooms < 1) return { ok: false, error: "INVALID_ROOMS" };
+    // Vakten bor i kontraktet, inte bara hos anroparen.
+    if (input.guests > rt.maxGuests * input.rooms) return { ok: false, error: "TOO_MANY_GUESTS" };
+
+    // Atomisk i denna process: lagerkoll + skrivning utan await emellan.
+    const check = checkRoomRequest(
+      rt,
+      input.checkIn,
+      input.checkOut,
+      input.rooms,
+      inventoryBookings(s),
+      inventoryBlocks(s, input.listingId),
+    );
+    if (!check.ok) return { ok: false, error: check.error, available: check.available };
 
     const booking: Booking = {
       ...input,
@@ -238,7 +403,7 @@ export class MemoryStore implements DataStore {
 
   async listBookingsByHost(
     hostId: string,
-  ): Promise<(Booking & { listingTitle: string })[]> {
+  ): Promise<(Booking & { listingTitle: string; roomTypeName: string })[]> {
     const s = state();
     const myListings = new Map(
       [...s.listings.values()].filter((l) => l.hostId === hostId).map((l) => [l.id, l]),
@@ -246,7 +411,11 @@ export class MemoryStore implements DataStore {
     return [...s.bookings.values()]
       .filter((b) => myListings.has(b.listingId))
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-      .map((b) => ({ ...b, listingTitle: myListings.get(b.listingId)!.title }));
+      .map((b) => ({
+        ...b,
+        listingTitle: myListings.get(b.listingId)!.title,
+        roomTypeName: s.roomTypes.get(b.roomTypeId)?.name ?? "",
+      }));
   }
 
   async cancelBooking(id: string, hostId: string): Promise<boolean> {

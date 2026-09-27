@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getPropertyById, getBookedRanges } from "@/lib/queries";
+import { getPropertyById } from "@/lib/queries";
 import { priceForDates } from "@/lib/pricing";
-import { isAvailable } from "@/lib/availability";
-import { isoDate, validateStay } from "@/lib/dates";
+import { validateStay } from "@/lib/dates";
+import { getStore } from "@/lib/store";
+import { formatPriceShort } from "@/lib/money";
+import { roomsLeftMessage } from "@/lib/roomCopy";
 import { CheckoutForm } from "@/components/CheckoutForm";
 
 // Checkout — 1:1-port av "Balaanso Booking.dc.html", med riktiga priser och
@@ -23,43 +25,64 @@ export default async function CheckoutPage({
 }) {
   const sp = await searchParams;
   const propertyId = first(sp.propertyId);
+  const roomTypeId = first(sp.roomTypeId);
   const checkIn = first(sp.checkIn);
   const checkOut = first(sp.checkOut);
   const guests = Math.max(1, parseInt(first(sp.guests) ?? "2", 10) || 2);
+  const rooms = parseInt(first(sp.rooms) ?? "1", 10);
 
-  if (!propertyId || !checkIn || !checkOut) {
-    return <Problem message="The booking is missing details. Go back and pick a stay and dates." />;
+  if (!propertyId || !roomTypeId || !checkIn || !checkOut) {
+    return <Problem message="The booking is missing details. Go back and choose a room and dates." />;
   }
   const property = await getPropertyById(propertyId);
   if (!property) return <Problem message="Stay not found." />;
+  const back = `/rooms/${property.slug}?${new URLSearchParams({ checkIn, checkOut, guests: String(guests) }).toString()}#rooms`;
+
+  const store = getStore();
+  const roomType = await store.getRoomType(roomTypeId);
+  if (!roomType || roomType.listingId !== property.id || roomType.archivedAt !== null) {
+    return <Problem message="That room is no longer offered. Choose another room." href={back} />;
+  }
+  if (!Number.isInteger(rooms) || rooms < 1) {
+    return <Problem message="Choose at least one room." href={back} />;
+  }
 
   const stay = validateStay(checkIn, checkOut);
-  if (!stay.ok) return <Problem message={stay.error} href={`/rooms/${property.slug}`} />;
-  if (guests > property.maxGuests) {
-    return <Problem message={`This stay takes at most ${property.maxGuests} guests.`} href={`/rooms/${property.slug}`} />;
+  if (!stay.ok) return <Problem message={stay.error} href={back} />;
+  const capacity = roomType.maxGuests * rooms;
+  if (guests > capacity) {
+    return (
+      <Problem
+        message={`${rooms} × ${roomType.name} sleeps at most ${capacity} ${capacity === 1 ? "guest" : "guests"}. Add a room or choose a larger room.`}
+        href={back}
+      />
+    );
   }
 
-  let breakdown;
-  try {
-    breakdown = priceForDates({
-      nightlyPriceCents: property.nightlyPriceCents,
-      cleaningFeeCents: property.cleaningFeeCents,
-      checkIn,
-      checkOut,
-    });
-  } catch {
-    return <Problem message="Invalid dates. Choose at least one night." />;
-  }
-
-  const ranges = await getBookedRanges(property.id);
-  const free = isAvailable(
-    { checkIn, checkOut },
-    ranges.map((r) => ({ checkIn: isoDate(r.checkIn), checkOut: isoDate(r.checkOut) })),
+  // Lagret för just dessa nätter — samma motor som den atomiska bokningen.
+  const current = (await store.getRoomAvailability(property.id, checkIn, checkOut)).find(
+    (a) => a.roomType.id === roomType.id,
   );
-  if (!free) return <Problem message="Those dates are already booked." href={`/rooms/${property.slug}`} />;
+  if (!current || current.closed) {
+    return <Problem message={`The ${roomType.name} is not available on those dates.`} href={back} />;
+  }
+  if (current.available < rooms) {
+    return <Problem message={roomsLeftMessage(current.available, rooms, roomType.name)} href={back} />;
+  }
 
-  const $ = (c: number) => "$" + (c % 100 === 0 ? c / 100 : (c / 100).toFixed(2));
-  const cover = property.images[0];
+  // Priset räknas ALLTID här på servern ur rumstypens pris — aldrig ur URL:en.
+  const breakdown = priceForDates({
+    nightlyPriceCents: roomType.nightlyPriceCents,
+    cleaningFeeCents: property.cleaningFeeCents,
+    checkIn,
+    checkOut,
+    rooms,
+  });
+
+  const $ = (c: number) => formatPriceShort(c);
+  const cover = roomType.images[0] ?? property.images[0];
+  const roomLabel = `${rooms} × ${roomType.name}`;
+  const nightsLabel = `${breakdown.nights} ${breakdown.nights === 1 ? "night" : "nights"}`;
 
   return (
     <div style={{ background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-body)" }}>
@@ -75,27 +98,44 @@ export default async function CheckoutPage({
         </div>
 
         <div className="b-detail-grid" style={{ padding: "var(--s-6) 0 0" }}>
-          <CheckoutForm propertyId={property.id} checkIn={checkIn} checkOut={checkOut} guests={guests} title={property.title} />
+          <CheckoutForm
+            propertyId={property.id}
+            roomTypeId={roomType.id}
+            rooms={rooms}
+            checkIn={checkIn}
+            checkOut={checkOut}
+            guests={guests}
+            roomLabel={roomLabel}
+          />
 
           <div>
             <div style={{ position: "sticky", top: 24, border: "1px solid var(--ink)" }}>
               <span className="b-media" style={{ height: 180, display: "block", position: "relative" }}>
-                {cover && <Image src={cover} alt={property.title} fill sizes="380px" />}
+                {cover && <Image src={cover} alt={roomType.name} fill sizes="380px" />}
               </span>
               <div style={{ padding: "24px 28px 28px" }}>
                 <div className="b-label">{property.city}, {property.country}</div>
                 <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", marginTop: 6 }}>{property.title}</div>
+                <div style={{ fontSize: "var(--text-body)", marginTop: 8 }} data-testid="checkout-room">
+                  {roomLabel}
+                </div>
                 <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: 4 }}>
-                  {checkIn} – {checkOut} · {guests} {guests === 1 ? "adult" : "adults"}
+                  {roomType.sizeSqm ? `${roomType.sizeSqm} m² · ` : ""}{roomType.bedConfig}
+                </div>
+                <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: 4 }}>
+                  {checkIn} – {checkOut} · {nightsLabel} · {guests} {guests === 1 ? "guest" : "guests"}
                 </div>
                 <div style={{ marginTop: "var(--s-4)", display: "flex", flexDirection: "column", gap: 10, fontSize: "var(--text-body)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span>{$(property.nightlyPriceCents)} × {breakdown.nights} {breakdown.nights === 1 ? "night" : "nights"}</span>
+                    <span>
+                      {$(roomType.nightlyPriceCents)} × {nightsLabel}
+                      {rooms > 1 ? ` × ${rooms} rooms` : ""}
+                    </span>
                     <span>{$(breakdown.subtotalCents)}</span>
                   </div>
                   {breakdown.cleaningFeeCents > 0 && (
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span>Cleaning fee</span>
+                      <span>Cleaning fee{rooms > 1 ? ` × ${rooms}` : ""}</span>
                       <span>{$(breakdown.cleaningFeeCents)}</span>
                     </div>
                   )}

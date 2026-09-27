@@ -22,6 +22,8 @@ export function getStore(): DataStore {
     } else {
       store = new MemoryStore();
     }
+    // En rad i serverloggen: vilken lagring kör den här processen mot?
+    console.info(`[blanso] DataStore: ${store instanceof SupabaseStore ? "Supabase" : "memory"}`);
   }
   return store;
 }

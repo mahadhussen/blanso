@@ -8,14 +8,32 @@ import type {
   Listing,
   NewBooking,
   NewListing,
+  NewRoomType,
+  RoomType,
 } from "../domain";
-import type { CreateBookingResult, DataStore } from "./types";
+import type {
+  CreateBookingResult,
+  DataStore,
+  InventoryRow,
+  RoomAvailability,
+  RoomTypeChangeResult,
+} from "./types";
+import {
+  availableForStay,
+  dateRange,
+  inventoryForRoomType,
+  peakBookedFrom,
+  type InventoryBlock,
+  type InventoryBooking,
+} from "../inventory";
+import { addDays, isoDate, todayUTC } from "../dates";
 
-// SupabaseStore — DataStore-kontraktet mot Balaanso (Postgres). Detta är den
-// utlovade "EN filen": resten av appen är oförändrad. Körs ENBART på servern
-// med service role; RLS i databasen nekar alla andra vägar in. Atomiciteten i
-// createBooking bor i databasens create_booking-funktion (radlås + koll +
-// insert i ett steg), inte i JS.
+// SupabaseStore — DataStore-kontraktet mot Balaanso (Postgres). Körs ENBART på
+// servern med service role; RLS i databasen nekar alla andra vägar in.
+// Atomiciteten i createBooking bor i databasens create_booking-funktion
+// (radlås på rumstypen + per-natt-kontroll + insert i ett steg). Läsvägarna
+// för lager hämtar rådata och räknar i SAMMA motor som MemoryStore
+// (src/lib/inventory.ts) — ingen parallell tillgänglighetslogik i JS.
 
 type Row = Record<string, unknown>;
 
@@ -31,6 +49,9 @@ function arr(v: unknown): string[] {
 // date-kolumner kommer som "YYYY-MM-DD", timestamptz som ISO — båda till string.
 function iso(v: unknown): string {
   return s(v);
+}
+function day(v: unknown): string {
+  return s(v).slice(0, 10);
 }
 
 function toListing(r: Row): Listing {
@@ -60,15 +81,35 @@ function toListing(r: Row): Listing {
   };
 }
 
+function toRoomType(r: Row): RoomType {
+  return {
+    id: s(r.id),
+    listingId: s(r.listing_id),
+    name: s(r.name),
+    sizeSqm: r.size_sqm === null || r.size_sqm === undefined ? null : n(r.size_sqm),
+    bedConfig: s(r.bed_config),
+    maxGuests: n(r.max_guests),
+    units: n(r.units),
+    nightlyPriceCents: n(r.nightly_price_cents),
+    images: arr(r.images),
+    sortOrder: n(r.sort_order),
+    archivedAt: r.archived_at ? iso(r.archived_at) : null,
+    createdAt: iso(r.created_at),
+    updatedAt: iso(r.updated_at),
+  };
+}
+
 function toBooking(r: Row): Booking {
   return {
     id: s(r.id),
     accessToken: s(r.access_token),
     listingId: s(r.listing_id),
+    roomTypeId: s(r.room_type_id),
+    rooms: n(r.rooms ?? 1),
     guestName: s(r.guest_name),
     guestEmail: s(r.guest_email),
-    checkIn: s(r.check_in).slice(0, 10),
-    checkOut: s(r.check_out).slice(0, 10),
+    checkIn: day(r.check_in),
+    checkOut: day(r.check_out),
     guests: n(r.guests),
     nights: n(r.nights),
     subtotalCents: n(r.subtotal_cents),
@@ -78,6 +119,18 @@ function toBooking(r: Row): Booking {
     currency: s(r.currency),
     status: s(r.status) as Booking["status"],
     paymentRef: s(r.payment_ref),
+    createdAt: iso(r.created_at),
+  };
+}
+
+function toBlock(r: Row): AvailabilityBlock {
+  return {
+    id: s(r.id),
+    listingId: s(r.listing_id),
+    roomTypeId: r.room_type_id ? s(r.room_type_id) : null,
+    checkIn: day(r.check_in),
+    checkOut: day(r.check_out),
+    note: r.note ? s(r.note) : undefined,
     createdAt: iso(r.created_at),
   };
 }
@@ -99,6 +152,38 @@ function listingPatchToRow(patch: Partial<NewListing>): Row {
   if (patch.images !== undefined) row.images = patch.images;
   if (patch.amenities !== undefined) row.amenities = patch.amenities;
   return row;
+}
+
+function roomTypePatchToRow(patch: Partial<NewRoomType>): Row {
+  const row: Row = {};
+  if (patch.name !== undefined) row.name = patch.name;
+  if (patch.sizeSqm !== undefined) row.size_sqm = patch.sizeSqm;
+  if (patch.bedConfig !== undefined) row.bed_config = patch.bedConfig;
+  if (patch.maxGuests !== undefined) row.max_guests = patch.maxGuests;
+  if (patch.units !== undefined) row.units = patch.units;
+  if (patch.nightlyPriceCents !== undefined) row.nightly_price_cents = patch.nightlyPriceCents;
+  if (patch.images !== undefined) row.images = patch.images;
+  if (patch.sortOrder !== undefined) row.sort_order = patch.sortOrder;
+  return row;
+}
+
+function toInventoryBooking(r: Row): InventoryBooking {
+  return {
+    roomTypeId: s(r.room_type_id),
+    checkIn: day(r.check_in),
+    checkOut: day(r.check_out),
+    rooms: n(r.rooms ?? 1),
+    status: s(r.status),
+  };
+}
+
+function toInventoryBlock(r: Row): InventoryBlock & { listingId: string } {
+  return {
+    listingId: s(r.listing_id),
+    roomTypeId: r.room_type_id ? s(r.room_type_id) : null,
+    checkIn: day(r.check_in),
+    checkOut: day(r.check_out),
+  };
 }
 
 function slugify(input: string): string {
@@ -236,49 +321,195 @@ export class SupabaseStore implements DataStore {
     return data ? toListing(data) : null;
   }
 
-  async getBlockedRanges(
-    listingId: string,
-  ): Promise<{ checkIn: string; checkOut: string; source: "booking" | "block" }[]> {
+  // ---- Rumstyper ----------------------------------------------------------
+
+  async listRoomTypes(listingId: string): Promise<RoomType[]> {
+    return this.listRoomTypesForListings([listingId]);
+  }
+
+  async listRoomTypesForListings(listingIds: string[]): Promise<RoomType[]> {
+    if (listingIds.length === 0) return [];
+    const { data, error } = await this.client
+      .from("room_types")
+      .select("*")
+      .in("listing_id", listingIds)
+      .is("archived_at", null)
+      .order("sort_order", { ascending: true })
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true });
+    if (error) throw new Error(`listRoomTypesForListings: ${error.message}`);
+    return (data ?? []).map(toRoomType);
+  }
+
+  async getRoomType(id: string): Promise<RoomType | null> {
+    const { data, error } = await this.client.from("room_types").select("*").eq("id", id).maybeSingle();
+    if (error) throw new Error(`getRoomType: ${error.message}`);
+    return data ? toRoomType(data) : null;
+  }
+
+  // Aktiv rumstyp vars boende ägs av hostId, annars null.
+  private async ownedRoomType(id: string, hostId: string): Promise<RoomType | null> {
+    const rt = await this.getRoomType(id);
+    if (!rt || rt.archivedAt !== null) return null;
+    const listing = await this.getListingById(rt.listingId);
+    if (!listing || listing.hostId !== hostId) return null;
+    return rt;
+  }
+
+  async createRoomType(listingId: string, hostId: string, input: NewRoomType): Promise<RoomType | null> {
+    const listing = await this.getListingById(listingId);
+    if (!listing || listing.hostId !== hostId) return null;
+    const { data, error } = await this.client
+      .from("room_types")
+      .insert({ id: `rt_${randomUUID().slice(0, 12)}`, listing_id: listingId, ...roomTypePatchToRow(input) })
+      .select("*")
+      .single();
+    if (error) throw new Error(`createRoomType: ${error.message}`);
+    return toRoomType(data);
+  }
+
+  async updateRoomType(id: string, hostId: string, patch: Partial<NewRoomType>): Promise<RoomTypeChangeResult> {
+    const cur = await this.ownedRoomType(id, hostId);
+    if (!cur) return { ok: false, error: "NOT_FOUND" };
+    if (patch.units !== undefined && patch.units < cur.units) {
+      const today = isoDate(todayUTC());
+      const { data, error } = await this.client
+        .from("bookings")
+        .select("room_type_id, check_in, check_out, rooms, status")
+        .eq("room_type_id", id)
+        .eq("status", "confirmed")
+        .gt("check_out", today);
+      if (error) throw new Error(`updateRoomType: ${error.message}`);
+      const peak = peakBookedFrom(id, today, (data ?? []).map(toInventoryBooking));
+      if (patch.units < peak) return { ok: false, error: "UNITS_BELOW_BOOKED", detail: peak };
+    }
+    const { data, error } = await this.client
+      .from("room_types")
+      .update({ ...roomTypePatchToRow(patch), updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .is("archived_at", null)
+      .select("*")
+      .maybeSingle();
+    if (error) throw new Error(`updateRoomType: ${error.message}`);
+    return data ? { ok: true, roomType: toRoomType(data) } : { ok: false, error: "NOT_FOUND" };
+  }
+
+  async deleteRoomType(id: string, hostId: string): Promise<RoomTypeChangeResult> {
+    const cur = await this.ownedRoomType(id, hostId);
+    if (!cur) return { ok: false, error: "NOT_FOUND" };
+    const { count, error: countErr } = await this.client
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("room_type_id", id)
+      .eq("status", "confirmed")
+      .gt("check_out", isoDate(todayUTC()));
+    if (countErr) throw new Error(`deleteRoomType: ${countErr.message}`);
+    if ((count ?? 0) > 0) return { ok: false, error: "HAS_FUTURE_BOOKINGS", detail: count ?? 0 };
+    const now = new Date().toISOString();
+    const { data, error } = await this.client
+      .from("room_types")
+      .update({ archived_at: now, updated_at: now })
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error) throw new Error(`deleteRoomType: ${error.message}`);
+    return { ok: true, roomType: toRoomType(data) };
+  }
+
+  // ---- Lager ----------------------------------------------------------------
+
+  // Rådata för motorn: aktiva typer, bekräftade bokningar och stängningar som
+  // överlappar [from, to).
+  private async inventoryInputs(listingIds: string[], from: string, to: string) {
+    const roomTypes = await this.listRoomTypesForListings(listingIds);
+    if (roomTypes.length === 0) return { roomTypes, bookings: [], blocks: [] };
     const [bookings, blocks] = await Promise.all([
       this.client
         .from("bookings")
-        .select("check_in, check_out")
-        .eq("listing_id", listingId)
-        .eq("status", "confirmed"),
+        .select("room_type_id, check_in, check_out, rooms, status")
+        .in("room_type_id", roomTypes.map((r) => r.id))
+        .eq("status", "confirmed")
+        .lt("check_in", to)
+        .gt("check_out", from),
       this.client
         .from("availability_blocks")
-        .select("check_in, check_out")
-        .eq("listing_id", listingId),
+        .select("listing_id, room_type_id, check_in, check_out")
+        .in("listing_id", listingIds)
+        .lt("check_in", to)
+        .gt("check_out", from),
     ]);
-    if (bookings.error) throw new Error(`getBlockedRanges: ${bookings.error.message}`);
-    if (blocks.error) throw new Error(`getBlockedRanges: ${blocks.error.message}`);
-    return [
-      ...(bookings.data ?? []).map((r) => ({
-        checkIn: s(r.check_in).slice(0, 10),
-        checkOut: s(r.check_out).slice(0, 10),
-        source: "booking" as const,
-      })),
-      ...(blocks.data ?? []).map((r) => ({
-        checkIn: s(r.check_in).slice(0, 10),
-        checkOut: s(r.check_out).slice(0, 10),
-        source: "block" as const,
-      })),
-    ];
+    if (bookings.error) throw new Error(`inventory: ${bookings.error.message}`);
+    if (blocks.error) throw new Error(`inventory: ${blocks.error.message}`);
+    return {
+      roomTypes,
+      bookings: (bookings.data ?? []).map(toInventoryBooking),
+      blocks: (blocks.data ?? []).map(toInventoryBlock),
+    };
+  }
+
+  async getRoomAvailability(listingId: string, checkIn: string, checkOut: string): Promise<RoomAvailability[]> {
+    return (await this.getRoomAvailabilityForListings([listingId], checkIn, checkOut))[listingId] ?? [];
+  }
+
+  async getRoomAvailabilityForListings(
+    listingIds: string[],
+    checkIn: string,
+    checkOut: string,
+  ): Promise<Record<string, RoomAvailability[]>> {
+    const out: Record<string, RoomAvailability[]> = Object.fromEntries(listingIds.map((id) => [id, []]));
+    if (listingIds.length === 0) return out;
+    const { roomTypes, bookings, blocks } = await this.inventoryInputs(listingIds, checkIn, checkOut);
+    for (const roomType of roomTypes) {
+      const mine = blocks.filter((b) => b.listingId === roomType.listingId);
+      out[roomType.listingId].push({
+        roomType,
+        ...availableForStay(roomType, checkIn, checkOut, bookings, mine),
+      });
+    }
+    return out;
+  }
+
+  async getInventoryCalendar(listingId: string, from: string, days: number): Promise<InventoryRow[]> {
+    const to = isoDate(addDays(from, days));
+    const { roomTypes, bookings, blocks } = await this.inventoryInputs([listingId], from, to);
+    const nights = dateRange(from, days);
+    return roomTypes.map((roomType) => ({
+      roomType,
+      days: inventoryForRoomType(roomType, nights, bookings, blocks),
+    }));
+  }
+
+  // ---- Stängningar ----------------------------------------------------------
+
+  async listAvailabilityBlocks(listingId: string): Promise<AvailabilityBlock[]> {
+    const { data, error } = await this.client
+      .from("availability_blocks")
+      .select("*")
+      .eq("listing_id", listingId)
+      .order("check_in", { ascending: true });
+    if (error) throw new Error(`listAvailabilityBlocks: ${error.message}`);
+    return (data ?? []).map(toBlock);
   }
 
   async addAvailabilityBlock(
     listingId: string,
     hostId: string,
-    block: { checkIn: string; checkOut: string; note?: string },
+    block: { checkIn: string; checkOut: string; note?: string; roomTypeId?: string | null },
   ): Promise<AvailabilityBlock | null> {
     // Ägarskap kontrolleras serverside före insert, som i MemoryStore.
     const listing = await this.getListingById(listingId);
     if (!listing || listing.hostId !== hostId) return null;
+    const roomTypeId = block.roomTypeId ?? null;
+    if (roomTypeId !== null) {
+      const rt = await this.getRoomType(roomTypeId);
+      if (!rt || rt.listingId !== listingId || rt.archivedAt !== null) return null;
+    }
     const { data, error } = await this.client
       .from("availability_blocks")
       .insert({
         id: `blk_${randomUUID().slice(0, 12)}`,
         listing_id: listingId,
+        room_type_id: roomTypeId,
         check_in: block.checkIn,
         check_out: block.checkOut,
         note: block.note ?? null,
@@ -286,15 +517,7 @@ export class SupabaseStore implements DataStore {
       .select("*")
       .single();
     if (error) throw new Error(`addAvailabilityBlock: ${error.message}`);
-    if (!data) return null;
-    return {
-      id: s(data.id),
-      listingId: s(data.listing_id),
-      checkIn: s(data.check_in).slice(0, 10),
-      checkOut: s(data.check_out).slice(0, 10),
-      note: data.note ? s(data.note) : undefined,
-      createdAt: iso(data.created_at),
-    };
+    return data ? toBlock(data) : null;
   }
 
   async removeAvailabilityBlock(id: string, hostId: string): Promise<boolean> {
@@ -312,6 +535,8 @@ export class SupabaseStore implements DataStore {
     return true;
   }
 
+  // ---- Bokningar ------------------------------------------------------------
+
   async createBooking(
     input: NewBooking & { paymentRef: string },
   ): Promise<CreateBookingResult> {
@@ -319,6 +544,8 @@ export class SupabaseStore implements DataStore {
       p_id: `bok_${randomUUID().slice(0, 12)}`,
       p_access_token: randomBytes(24).toString("hex"),
       p_listing_id: input.listingId,
+      p_room_type_id: input.roomTypeId,
+      p_rooms: input.rooms,
       p_guest_name: input.guestName,
       p_guest_email: input.guestEmail,
       p_check_in: input.checkIn,
@@ -333,8 +560,17 @@ export class SupabaseStore implements DataStore {
       p_payment_ref: input.paymentRef,
     });
     if (error) throw new Error(`createBooking: ${error.message}`);
-    const result = data as { ok: boolean; error?: CreateBookingResult["error"]; booking?: Row };
-    if (!result.ok) return { ok: false, error: result.error };
+    const result = data as {
+      ok: boolean;
+      error?: CreateBookingResult["error"];
+      available?: number;
+      booking?: Row;
+    };
+    if (!result.ok) {
+      return result.available === undefined
+        ? { ok: false, error: result.error }
+        : { ok: false, error: result.error, available: n(result.available) };
+    }
     return { ok: true, booking: toBooking(result.booking!) };
   }
 
@@ -350,16 +586,17 @@ export class SupabaseStore implements DataStore {
 
   async listBookingsByHost(
     hostId: string,
-  ): Promise<(Booking & { listingTitle: string })[]> {
+  ): Promise<(Booking & { listingTitle: string; roomTypeName: string })[]> {
     const { data, error } = await this.client
       .from("bookings")
-      .select("*, listings!inner(title, host_id)")
+      .select("*, listings!inner(title, host_id), room_types(name)")
       .eq("listings.host_id", hostId)
       .order("created_at", { ascending: false });
     if (error) throw new Error(`listBookingsByHost: ${error.message}`);
     return (data ?? []).map((r) => ({
       ...toBooking(r),
       listingTitle: s((r.listings as Row)?.title),
+      roomTypeName: s((r.room_types as Row | null)?.name),
     }));
   }
 

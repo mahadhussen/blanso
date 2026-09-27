@@ -2,13 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getPropertyBySlug, getBookedRanges } from "@/lib/queries";
-import { BookingPanelDc } from "@/components/BookingPanelDc";
-import { isoDate } from "@/lib/dates";
+import { getPropertyBySlug, getRoomOffers, stayFrom } from "@/lib/queries";
+import { RoomBooking } from "@/components/RoomBooking";
+import { nightsBetween, validateStay } from "@/lib/dates";
 
-// Boendesidan — 1:1-port av "Balaanso Hotel.dc.html", datadriven.
-// Loggade avvikelser (WORKLOG): en bokningsbar enhet (inga rumsrader),
-// inga recensionscitat (fabricerat innehåll), inga nyckelavstånd (saknar data).
+// Boendesidan — 1:1-port av "Balaanso Hotel.dc.html", datadriven. Facitets
+// "Välj rum"-rader är nu riktiga rumstyper med lager per natt (RoomBooking).
+// Loggade avvikelser (WORKLOG): inga recensionscitat (fabricerat innehåll),
+// inga nyckelavstånd (saknar data).
 
 export const dynamic = "force-dynamic";
 
@@ -34,14 +35,20 @@ export default async function PropertyPage({
   const property = await getPropertyBySlug(slug);
   if (!property) notFound();
 
-  const [rangesRaw, sp] = await Promise.all([getBookedRanges(property.id), searchParams]);
-  const bookedRanges = rangesRaw.map((r) => ({ checkIn: isoDate(r.checkIn), checkOut: isoDate(r.checkOut) }));
+  const sp = await searchParams;
   const guestsRaw = first(sp.guests);
+  const checkIn = first(sp.checkIn);
+  const checkOut = first(sp.checkOut);
   const initial = {
-    checkIn: first(sp.checkIn),
-    checkOut: first(sp.checkOut),
-    guests: guestsRaw ? Math.max(1, parseInt(guestsRaw, 10) || 1) : 2,
+    checkIn,
+    checkOut,
+    guests: guestsRaw ? Math.max(1, Math.min(50, parseInt(guestsRaw, 10) || 1)) : 2,
   };
+  const stayOk = stayFrom(checkIn, checkOut);
+  const stay = stayOk ? { ...stayOk, nights: nightsBetween(stayOk.checkIn, stayOk.checkOut) } : null;
+  const dateCheck = checkIn || checkOut ? validateStay(checkIn, checkOut) : null;
+  const dateError = dateCheck && !dateCheck.ok ? dateCheck.error : null;
+  const offers = await getRoomOffers(property, stay);
 
   const imgs = property.images;
   const paragraphs = property.description.split(/\n+/).filter(Boolean);
@@ -101,52 +108,52 @@ export default async function PropertyPage({
           </div>
         </div>
 
-        <div className="b-detail-grid" style={{ padding: "var(--s-7) 0" }}>
-          <div>
-            <div className="b-label">About the stay</div>
-            {paragraphs.map((t, i) => (
-              <p key={i} style={{ fontSize: "var(--text-lead)", lineHeight: 1.7, margin: i === 0 ? "20px 0 0" : "var(--s-3) 0 0", maxWidth: "60ch" }}>
-                {t}
-              </p>
-            ))}
-            <p style={{ fontSize: "var(--text-lead)", lineHeight: 1.7, margin: "var(--s-3) 0 0", maxWidth: "60ch" }}>
-              {property.maxGuests} guests · {property.bedrooms} {property.bedrooms === 1 ? "bedroom" : "bedrooms"} ·{" "}
-              {property.beds} {property.beds === 1 ? "bed" : "beds"} · {property.baths}{" "}
-              {property.baths === 1 ? "bathroom" : "bathrooms"}.
-            </p>
+        <RoomBooking
+          slug={property.slug}
+          propertyId={property.id}
+          cleaningFeeCents={property.cleaningFeeCents}
+          fromPriceCents={property.fromPriceCents}
+          offers={offers}
+          stay={stay}
+          initial={initial}
+          dateError={dateError}
+          about={
+            <>
+              <div className="b-label">About the stay</div>
+              {paragraphs.map((t, i) => (
+                <p key={i} style={{ fontSize: "var(--text-lead)", lineHeight: 1.7, margin: i === 0 ? "20px 0 0" : "var(--s-3) 0 0", maxWidth: "60ch" }}>
+                  {t}
+                </p>
+              ))}
+              {property.roomTypeCount > 0 && (
+                <p style={{ fontSize: "var(--text-lead)", lineHeight: 1.7, margin: "var(--s-3) 0 0", maxWidth: "60ch" }}>
+                  {property.roomTypeCount} {property.roomTypeCount === 1 ? "room type" : "room types"} · up to{" "}
+                  {property.maxGuestsPerRoom} {property.maxGuestsPerRoom === 1 ? "guest" : "guests"} per room.
+                </p>
+              )}
 
-            {property.amenities.length > 0 && (
-              <div style={{ marginTop: 56 }}>
-                <div className="b-label">Amenities</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 40px", marginTop: "var(--s-4)", fontSize: 18 }}>
-                  {property.amenities.map((a) => (
-                    <div key={a}>{a}</div>
-                  ))}
+              {property.amenities.length > 0 && (
+                <div style={{ marginTop: 56 }}>
+                  <div className="b-label">Amenities</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 40px", marginTop: "var(--s-4)", fontSize: 18 }}>
+                    {property.amenities.map((a) => (
+                      <div key={a}>{a}</div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {property.rating > 0 && (
-              <div style={{ marginTop: "var(--s-7)" }}>
-                <div className="b-label">Reviews · {property.rating.toFixed(1)} out of 10</div>
-                <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: "var(--s-3)", maxWidth: "60ch" }}>
-                  {property.reviewsCount} guests have rated this stay.
+              {property.rating > 0 && (
+                <div style={{ marginTop: "var(--s-7)" }}>
+                  <div className="b-label">Reviews · {property.rating.toFixed(1)} out of 10</div>
+                  <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: "var(--s-3)", maxWidth: "60ch" }}>
+                    {property.reviewsCount} guests have rated this stay.
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <BookingPanelDc
-              propertyId={property.id}
-              nightlyPriceCents={property.nightlyPriceCents}
-              cleaningFeeCents={property.cleaningFeeCents}
-              maxGuests={property.maxGuests}
-              bookedRanges={bookedRanges}
-              initial={initial}
-            />
-          </div>
-        </div>
+              )}
+            </>
+          }
+        />
       </div>
     </div>
   );

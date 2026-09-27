@@ -9,14 +9,16 @@ import { nightsBetween } from "./dates";
 export const SERVICE_FEE_RATE = 0.08;
 
 export interface PriceInput {
-  nightlyPriceCents: number;
-  cleaningFeeCents: number;
+  nightlyPriceCents: number; // per rum och natt
+  cleaningFeeCents: number; // per rum och vistelse
   nights: number;
+  rooms?: number; // antal rum av samma rumstyp, standard 1
   serviceFeeRate?: number;
 }
 
 export interface PriceBreakdown {
   nights: number;
+  rooms: number;
   nightlyPriceCents: number;
   subtotalCents: number;
   cleaningFeeCents: number;
@@ -25,25 +27,32 @@ export interface PriceBreakdown {
 }
 
 export function computePricing(input: PriceInput): PriceBreakdown {
-  const { nightlyPriceCents, cleaningFeeCents, nights } = input;
+  const { nightlyPriceCents, nights } = input;
+  const rooms = input.rooms ?? 1;
   const serviceFeeRate = input.serviceFeeRate ?? SERVICE_FEE_RATE;
 
   if (!Number.isInteger(nightlyPriceCents) || nightlyPriceCents < 0) {
     throw new Error("nightlyPriceCents måste vara ett icke-negativt heltal");
   }
-  if (!Number.isInteger(cleaningFeeCents) || cleaningFeeCents < 0) {
+  if (!Number.isInteger(input.cleaningFeeCents) || input.cleaningFeeCents < 0) {
     throw new Error("cleaningFeeCents måste vara ett icke-negativt heltal");
   }
   if (!Number.isInteger(nights) || nights < 1) {
     throw new Error("nights måste vara ett heltal >= 1");
   }
+  if (!Number.isInteger(rooms) || rooms < 1) {
+    throw new Error("rooms måste vara ett heltal >= 1");
+  }
 
-  const subtotalCents = nightlyPriceCents * nights;
+  // Varje rum städas: städavgiften gäller per rum (beslut 2026-09-27, WORKLOG).
+  const subtotalCents = nightlyPriceCents * nights * rooms;
+  const cleaningFeeCents = input.cleaningFeeCents * rooms;
   const serviceFeeCents = Math.round(subtotalCents * serviceFeeRate);
   const totalCents = subtotalCents + cleaningFeeCents + serviceFeeCents;
 
   return {
     nights,
+    rooms,
     nightlyPriceCents,
     subtotalCents,
     cleaningFeeCents,
@@ -58,6 +67,7 @@ export function priceForDates(params: {
   cleaningFeeCents: number;
   checkIn: Date | string;
   checkOut: Date | string;
+  rooms?: number;
   serviceFeeRate?: number;
 }): PriceBreakdown {
   const nights = nightsBetween(params.checkIn, params.checkOut);
@@ -65,6 +75,7 @@ export function priceForDates(params: {
     nightlyPriceCents: params.nightlyPriceCents,
     cleaningFeeCents: params.cleaningFeeCents,
     nights,
+    rooms: params.rooms,
     serviceFeeRate: params.serviceFeeRate,
   });
 }

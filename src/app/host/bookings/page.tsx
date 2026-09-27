@@ -40,10 +40,11 @@ export default async function HostBookingsPage() {
         </p>
       ) : (
         <div className="mt-6 overflow-x-auto rounded-2xl border border-line">
-          <table className="w-full min-w-[44rem] text-left text-sm">
+          <table className="w-full min-w-[52rem] text-left text-sm">
             <thead className="bg-panel text-muted">
               <tr>
                 <Th>Stay</Th>
+                <Th>Rooms</Th>
                 <Th>Guest</Th>
                 <Th>Dates</Th>
                 <Th>Amount</Th>
@@ -55,6 +56,9 @@ export default async function HostBookingsPage() {
               {bookings.map((b) => (
                 <tr key={b.id} className="bg-background">
                   <td className="px-4 py-3 font-medium text-ink">{b.listingTitle}</td>
+                  <td className="px-4 py-3 text-ink" data-testid="booking-rooms">
+                    {b.rooms} × {b.roomTypeName || "Room"}
+                  </td>
                   <td className="px-4 py-3 text-ink">
                     {b.guestName}
                     <div className="text-xs text-muted">{b.guestEmail}</div>
@@ -73,7 +77,7 @@ export default async function HostBookingsPage() {
                       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                         b.status === "confirmed"
                           ? "bg-brand-tint text-brand-dark"
-                          : "bg-red-50 text-red-700"
+                          : "border border-line text-muted line-through"
                       }`}
                     >
                       {b.status === "confirmed" ? "Confirmed" : "Cancelled"}
@@ -83,7 +87,7 @@ export default async function HostBookingsPage() {
                     {b.status === "confirmed" && (
                       <form action={cancelBookingAction}>
                         <input type="hidden" name="bookingId" value={b.id} />
-                        <button className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-red-300 hover:text-red-700">
+                        <button className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:border-ink hover:text-ink">
                           Cancel
                         </button>
                       </form>

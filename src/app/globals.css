@@ -273,3 +273,113 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
 @media (max-width: 760px) { .b-owner-grid { grid-template-columns: 1fr; gap: 32px !important; } }
 .b-owner-h2 { font-size: 44px; }
 @media (max-width: 760px) { .b-owner-h2 { font-size: 30px; } }
+
+/* ---- Rumstyper: gästens rumstabell (facitets .b-room-row + kolumner) ------- */
+.b-room-row { display: grid; grid-template-columns: 160px minmax(0, 1fr) auto; gap: 28px; align-items: center; }
+.b-room-head,
+.b-room-row-x { grid-template-columns: 140px minmax(0, 1fr) 84px 150px 132px; gap: 20px; }
+.b-room-head { display: grid; align-items: end; padding: 14px 0; border-bottom: 1px solid var(--hairline); }
+.b-room-price, .b-room-qty { text-align: right; }
+.b-room-mlabel { display: none; }
+.b-select {
+  border: 1px solid var(--ink); background: var(--paper); color: var(--ink);
+  font-family: var(--font-body); font-size: var(--text-body);
+  padding: 10px 12px; min-width: 104px; cursor: pointer;
+}
+.b-datebar { display: grid; grid-template-columns: 1fr 1fr 0.6fr auto; border: 1px solid var(--hairline); }
+.b-datebar > label { padding: var(--s-2) var(--s-3); border-right: 1px solid var(--hairline); display: block; min-width: 0; }
+.b-datebar > .b-btn { border: 0; padding: 0 28px; }
+.b-reserve-bar { display: none; }
+@media (max-width: 1100px) {
+  .b-reserve-bar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: var(--paper); border-top: 1px solid var(--ink); padding: 12px 20px;
+  }
+}
+@media (max-width: 760px) {
+  .b-room-head { display: none; }
+  .b-room-row-x {
+    grid-template-columns: 96px minmax(0, 1fr);
+    grid-template-areas: "img info" "sleeps sleeps" "price qty";
+    gap: 12px 16px; align-items: start;
+  }
+  .b-room-row-x > .b-room-img { grid-area: img; width: 96px !important; height: 80px !important; }
+  .b-room-row-x > div:nth-child(2) { grid-area: info; }
+  .b-room-row-x > .b-room-sleeps { grid-area: sleeps; }
+  .b-room-row-x > .b-room-price { grid-area: price; text-align: left; align-self: center; }
+  .b-room-row-x > .b-room-qty { grid-area: qty; align-self: center; }
+  .b-room-mlabel { display: inline; }
+  .b-datebar { grid-template-columns: 1fr 1fr; }
+  .b-datebar > label:nth-child(2) { border-right: none; }
+  .b-datebar > label { border-bottom: 1px solid var(--hairline); }
+  .b-datebar > .b-btn { grid-column: 1 / -1; padding: 16px 0; }
+}
+
+/* ---- Rumstyper: värdens lagerkalender ---------------------------------------
+   Ink-monokrom status, ingen färg: fritt = papper, delvis = tvätt, fullbokat =
+   svart fyllnad, stängt = streckat. Siffran är alltid lediga/totalt. */
+.b-cal-wrap { overflow-x: auto; border: 1px solid var(--hairline); max-width: 100%; }
+.b-cal { border-collapse: collapse; font-family: var(--font-label); font-size: 12px; min-width: 100%; }
+.b-cal th, .b-cal td { border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); text-align: center; padding: 0; }
+.b-cal thead th { padding: 8px 4px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; font-size: 10px; white-space: nowrap; background: var(--paper); }
+.b-cal thead th.b-cal-today { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+.b-cal .b-cal-name {
+  position: sticky; left: 0; z-index: 1; background: var(--paper); text-align: left;
+  padding: 10px 14px; min-width: 150px; max-width: 190px; border-right: 1px solid var(--ink);
+  font-family: var(--font-body); font-size: 15px; letter-spacing: 0; text-transform: none; color: var(--ink);
+}
+.b-cal .b-cal-name small { display: block; font-family: var(--font-label); font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+.b-cal-cell { min-width: 52px; height: 48px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
+.b-cal-cell span { display: block; font-size: 9px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px; }
+.b-cal-free { background: var(--paper); }
+.b-cal-partial { background: var(--wash); }
+.b-cal-full { background: var(--ink); color: var(--paper); }
+.b-cal-closed {
+  color: var(--muted);
+  background: repeating-linear-gradient(135deg, var(--paper) 0 5px, var(--hairline) 5px 6px);
+}
+.b-cal-legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-family: var(--font-label); font-size: 11px; color: var(--muted); }
+.b-cal-legend i { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--hairline); vertical-align: -3px; margin-right: 6px; }
+
+/* ---- Värdens extranät --------------------------------------------------- */
+.b-host-tabs { display: flex; gap: 28px; margin-top: 32px; border-bottom: 1px solid var(--hairline); overflow-x: auto; }
+.b-host-tabs a { font-family: var(--font-label); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 12px 0; white-space: nowrap; }
+.b-host-section { padding-top: 48px; scroll-margin-top: 16px; }
+.b-host-card { border: 1px solid var(--hairline); padding: 24px; }
+.b-note { margin: 12px 0 0; padding: 12px 16px; border-left: 2px solid var(--ink); background: var(--wash); }
+.b-form-error { margin: 0; font-size: 15px; border-left: 2px solid var(--ink); padding-left: 12px; }
+.b-host-room { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 20px; align-items: start; padding: 20px 0; border-bottom: 1px solid var(--hairline); }
+.b-host-room-actions { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; justify-content: flex-end; }
+.b-disclosure > summary { list-style: none; }
+.b-disclosure > summary::-webkit-details-marker { display: none; }
+.b-disclosure[open] > summary { background: var(--ink); color: var(--paper); }
+.b-disclosure-body { margin-top: 16px; border: 1px solid var(--hairline); padding: 20px; }
+.b-host-room:has(.b-disclosure[open]) { grid-template-columns: 120px minmax(0, 1fr); }
+.b-host-room:has(.b-disclosure[open]) .b-host-room-actions { grid-column: 1 / -1; justify-content: flex-start; }
+.b-disclosure[open] { flex-basis: 100%; }
+.b-rt-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.b-rt-form > label { display: block; min-width: 0; }
+.b-rt-wide { grid-column: 1 / -1; }
+.b-block-form { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1.2fr auto; gap: 12px; align-items: end; }
+.b-block-form > label { display: block; min-width: 0; }
+.b-host-list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--hairline); }
+.b-host-list > li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--hairline); }
+@media (max-width: 900px) {
+  .b-block-form { grid-template-columns: 1fr 1fr; }
+  .b-block-form > label:first-of-type { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .b-host-room { grid-template-columns: 88px minmax(0, 1fr); }
+  .b-host-room > .b-media { width: 88px !important; height: 68px !important; }
+  .b-host-room-actions { grid-column: 1 / -1; justify-content: flex-start; }
+  .b-rt-form { grid-template-columns: 1fr 1fr; }
+  .b-host-card { padding: 16px; }
+  .b-block-form { grid-template-columns: 1fr; }
+  .b-host-list > li { flex-wrap: wrap; }
+}
+.b-host-grid { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 48px; margin-top: 40px; }
+.b-form-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.b-form-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+@media (max-width: 1100px) { .b-host-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 480px) { .b-form-3 { grid-template-columns: 1fr 1fr; } }

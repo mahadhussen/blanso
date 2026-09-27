@@ -10,6 +10,12 @@ export interface Host {
   createdAt: string; // ISO
 }
 
+// En listning är ett BOENDE (hotell, gästhus, villa). Det bokningsbara är dess
+// rumstyper (RoomType) — booking.com-/QloApps-modellen: rumstyp × antal enheter
+// × natt. Listningens egna pris-/kapacitetsfält (nightlyPriceCents, maxGuests,
+// bedrooms, beds, baths) är arv från modellen före rumstyper: de används bara
+// för att härleda en första rumstyp (backfill) och ALDRIG för pris eller
+// tillgänglighet. Vyer härleder "From $X" och kapacitet ur rumstyperna.
 export interface Listing {
   id: string;
   hostId: string;
@@ -36,12 +42,32 @@ export interface Listing {
   updatedAt: string;
 }
 
+// En rumstyp: "Deluxe Double Room", 24 m², 1 king bed, 2 gäster, 3 fysiska rum.
+// units = antal fysiska rum av typen; lagret räknas per natt mot units.
+export interface RoomType {
+  id: string;
+  listingId: string;
+  name: string;
+  sizeSqm: number | null; // null bara för härledda (backfill) typer där storlek saknas
+  bedConfig: string; // "1 king bed", "2 single beds"
+  maxGuests: number; // per rum
+  units: number; // antal fysiska rum, >= 1
+  nightlyPriceCents: number; // per rum och natt, heltal cent
+  images: string[]; // tom = faller tillbaka till boendets foton
+  sortOrder: number;
+  archivedAt: string | null; // borttagen av värden; historiska bokningar pekar kvar hit
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type BookingStatus = "confirmed" | "cancelled";
 
 export interface Booking {
   id: string;
   accessToken: string; // ogenomskinlig token för gästens bekräftelselänk (IDOR-skydd)
   listingId: string;
+  roomTypeId: string;
+  rooms: number; // antal rum av rumstypen, >= 1
   guestName: string;
   guestEmail: string;
   checkIn: string; // YYYY-MM-DD
@@ -58,10 +84,12 @@ export interface Booking {
   createdAt: string;
 }
 
-// Värdens egen blockering av datum (underhåll, privat bruk) — skild från bokningar.
+// Värdens egen stängning av datum (underhåll, privat bruk) — skild från bokningar.
+// roomTypeId null = hela boendet stängt; annars bara den rumstypen.
 export interface AvailabilityBlock {
   id: string;
   listingId: string;
+  roomTypeId: string | null;
   checkIn: string;
   checkOut: string;
   note?: string;
@@ -77,4 +105,9 @@ export type NewListing = Omit<
 export type NewBooking = Omit<
   Booking,
   "id" | "accessToken" | "status" | "createdAt"
+>;
+
+export type NewRoomType = Omit<
+  RoomType,
+  "id" | "listingId" | "archivedAt" | "createdAt" | "updatedAt"
 >;

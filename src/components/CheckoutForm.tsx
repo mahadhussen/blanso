@@ -26,16 +26,20 @@ type Method = "card" | "mobile" | "arrival";
 
 export function CheckoutForm({
   propertyId,
+  roomTypeId,
+  rooms,
   checkIn,
   checkOut,
   guests,
-  title,
+  roomLabel,
 }: {
   propertyId: string;
+  roomTypeId: string;
+  rooms: number;
   checkIn: string;
   checkOut: string;
   guests: number;
-  title: string;
+  roomLabel: string;
 }) {
   const [state, formAction, pending] = useActionState(createBookingAndPay, initial);
   const [method, setMethod] = useState<Method>("card");
@@ -69,6 +73,8 @@ export function CheckoutForm({
   return (
     <form id="booking-form" action={formAction} style={{ display: "flex", flexDirection: "column", gap: "var(--s-6)" }}>
       <input type="hidden" name="propertyId" value={propertyId} />
+      <input type="hidden" name="roomTypeId" value={roomTypeId} />
+      <input type="hidden" name="rooms" value={rooms} />
       <input type="hidden" name="checkIn" value={checkIn} />
       <input type="hidden" name="checkOut" value={checkOut} />
       <input type="hidden" name="guests" value={guests} />
@@ -88,7 +94,7 @@ export function CheckoutForm({
             <div style={{ padding: "var(--s-3) var(--s-4)" }}>
               <div className="b-label" style={label9}>Room</div>
               <div style={{ fontSize: "var(--text-body)", marginTop: 4 }}>
-                {title} · {guests} {guests === 1 ? "adult" : "adults"}
+                {roomLabel} · {guests} {guests === 1 ? "guest" : "guests"}
               </div>
             </div>
           </div>

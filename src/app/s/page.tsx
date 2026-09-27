@@ -2,6 +2,7 @@ import Link from "next/link";
 import { searchProperties } from "@/lib/queries";
 import type { PropertyView } from "@/lib/queries";
 import { SearchBarDc } from "@/components/SearchBarDc";
+import { formatPriceShort } from "@/lib/money";
 
 // Sökresultat — 1:1-port av "Balaanso Search.dc.html". Chrome och typografi är
 // prototypens; data och filter är riktiga (querystring → serverfiltrering).
@@ -22,7 +23,7 @@ const PRICE_BANDS = [
   { key: "60-120", label: "$60–120", min: 6000, max: 12000 },
   { key: "o120", label: "Over $120", min: 12000, max: Infinity },
 ];
-// Typ härleds ur titeln (domänen har en bokningsbar enhet per listning).
+// Boendetyp härleds ur titeln (domänen har ingen typdimension på boendet).
 const TYPES = [
   { key: "suite", label: "Suite", match: /suite/i },
   { key: "villa", label: "Entire villa", match: /villa|house/i },
@@ -32,9 +33,8 @@ const AMENITIES = ["Sea view", "Breakfast included", "Airport transfer", "24h el
 
 function specLine(p: PropertyView): string {
   const bits = [
-    `${p.maxGuests} guests`,
-    `${p.bedrooms} ${p.bedrooms === 1 ? "bedroom" : "bedrooms"}`,
-    `${p.beds} ${p.beds === 1 ? "bed" : "beds"}`,
+    `${p.roomTypeCount} ${p.roomTypeCount === 1 ? "room type" : "room types"}`,
+    `Up to ${p.maxGuestsPerRoom} ${p.maxGuestsPerRoom === 1 ? "guest" : "guests"} per room`,
   ];
   if (p.amenities.includes("Sea view")) bits.push("Sea view");
   return bits.join(" · ");
@@ -61,11 +61,13 @@ export default async function SearchPage({
   const typeKeys = all(sp.type);
   const amenityKeys = all(sp.amenity);
 
-  let properties = await searchProperties({ destination, guests });
+  // Datum + gäster filtrerar på verkligt lager: ett boende visas bara om någon
+  // rumstyp har lediga rum som rymmer sällskapet; priset är billigaste sådana.
+  let properties = await searchProperties({ destination, guests, checkIn, checkOut });
   if (priceKeys.length > 0) {
     const bands = PRICE_BANDS.filter((b) => priceKeys.includes(b.key));
     properties = properties.filter((p) =>
-      bands.some((b) => p.nightlyPriceCents >= b.min && p.nightlyPriceCents < b.max),
+      bands.some((b) => p.fromPriceCents >= b.min && p.fromPriceCents < b.max),
     );
   }
   if (typeKeys.length > 0) {
@@ -77,7 +79,7 @@ export default async function SearchPage({
   }
   properties = [...properties].sort((a, b) =>
     sort === "price"
-      ? a.nightlyPriceCents - b.nightlyPriceCents
+      ? a.fromPriceCents - b.fromPriceCents
       : b.rating - a.rating || b.reviewsCount - a.reviewsCount,
   );
 
@@ -183,7 +185,8 @@ export default async function SearchPage({
                     ) : (
                       <span className="b-label b-label-ink">New</span>
                     )}
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-num)", marginTop: "var(--s-3)" }}>${Math.round(r.nightlyPriceCents / 100)}</div>
+                    <div className="b-label" style={{ letterSpacing: "var(--ls-label-tight)", marginTop: "var(--s-3)" }}>From</div>
+                    <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-num)" }}>{formatPriceShort(r.fromPriceCents)}</div>
                     <div className="b-label" style={{ letterSpacing: "var(--ls-label-tight)", marginTop: 2 }}>per night</div>
                   </div>
                 </a>

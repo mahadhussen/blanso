@@ -49,4 +49,42 @@ describe("computePricing — facit", () => {
       computePricing({ nightlyPriceCents: -1, cleaningFeeCents: 0, nights: 1 }),
     ).toThrow();
   });
+
+  it("flera rum av samma typ: delsumma, städ och avgift skalar per rum (facit)", () => {
+    // 2 × Deluxe à $95, 3 nätter, städ $20 per rum.
+    const b = computePricing({ nightlyPriceCents: 9500, cleaningFeeCents: 2000, nights: 3, rooms: 2 });
+    expect(b.rooms).toBe(2);
+    expect(b.subtotalCents).toBe(57000); // 9500 × 3 × 2
+    expect(b.cleaningFeeCents).toBe(4000); // 2000 × 2
+    expect(b.serviceFeeCents).toBe(4560); // round(57000 × 0.08)
+    expect(b.totalCents).toBe(65560);
+    expect(formatMoney(b.totalCents)).toBe("$655.60");
+  });
+
+  it("rooms = 1 är standard och ger samma pris som före rumstyper", () => {
+    const a = computePricing({ nightlyPriceCents: 8500, cleaningFeeCents: 2000, nights: 4 });
+    const b = computePricing({ nightlyPriceCents: 8500, cleaningFeeCents: 2000, nights: 4, rooms: 1 });
+    expect(a).toEqual(b);
+    expect(a.totalCents).toBe(34000 + 2000 + 2720);
+  });
+
+  it("vägrar noll, negativa och brutna antal rum", () => {
+    for (const rooms of [0, -1, 1.5]) {
+      expect(() =>
+        computePricing({ nightlyPriceCents: 9500, cleaningFeeCents: 0, nights: 1, rooms }),
+      ).toThrow();
+    }
+  });
+
+  it("priceForDates tar rooms", () => {
+    const b = priceForDates({
+      nightlyPriceCents: 14000,
+      cleaningFeeCents: 0,
+      checkIn: "2026-10-01",
+      checkOut: "2026-10-03",
+      rooms: 3,
+    });
+    expect(b.subtotalCents).toBe(84000);
+    expect(b.totalCents).toBe(84000 + 6720);
+  });
 });

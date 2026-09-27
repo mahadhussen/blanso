@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getStore } from "@/lib/store";
+import { formatPriceShort } from "@/lib/money";
 
 // Bekräftelsen — 1:1-port av "Balaanso Confirmation.dc.html", datadriven.
 export const metadata = { title: "Booking confirmation" };
@@ -23,12 +24,15 @@ export default async function BookingConfirmationPage({
   // Slås upp på den ogenomskinliga token, aldrig på id (IDOR-skydd).
   const booking = await store.getBookingByToken(token);
   if (!booking) notFound();
-  const listing = await store.getListingById(booking.listingId);
+  const [listing, roomType] = await Promise.all([
+    store.getListingById(booking.listingId),
+    store.getRoomType(booking.roomTypeId),
+  ]);
   if (!listing) notFound();
 
-  const cover = listing.images[0];
+  const cover = roomType?.images[0] ?? listing.images[0];
   const confirmed = booking.status === "confirmed";
-  const $ = (c: number) => "$" + (c % 100 === 0 ? c / 100 : (c / 100).toFixed(2));
+  const $ = (c: number) => formatPriceShort(c);
   const label9: React.CSSProperties = { fontSize: 9, letterSpacing: "var(--ls-label-tight)", display: "block" };
 
   return (
@@ -55,6 +59,15 @@ export default async function BookingConfirmationPage({
           <div style={{ padding: 28 }}>
             <div className="b-label">{listing.city}, {listing.country}</div>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", marginTop: 6 }}>{listing.title}</div>
+            {roomType && (
+              <div style={{ fontSize: "var(--text-body)", marginTop: 6 }} data-testid="booking-room">
+                {booking.rooms} × {roomType.name}
+                <span style={{ color: "var(--ink-2)" }}>
+                  {" "}· {booking.nights} {booking.nights === 1 ? "night" : "nights"}
+                  {roomType.sizeSqm ? ` · ${roomType.sizeSqm} m²` : ""} · {roomType.bedConfig}
+                </span>
+              </div>
+            )}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--s-4)", marginTop: "var(--s-4)", fontSize: "var(--text-body)" }}>
               <div>
                 <span className="b-label" style={label9}>Check-in</span>
@@ -66,7 +79,7 @@ export default async function BookingConfirmationPage({
               </div>
               <div>
                 <span className="b-label" style={label9}>Guests</span>
-                <span style={{ display: "block", marginTop: 4 }}>{booking.guests} {booking.guests === 1 ? "adult" : "adults"}</span>
+                <span style={{ display: "block", marginTop: 4 }}>{booking.guests} {booking.guests === 1 ? "guest" : "guests"}</span>
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--hairline)", marginTop: "var(--s-4)", paddingTop: "var(--s-3)", fontSize: "var(--text-body)", fontWeight: 500 }}>
