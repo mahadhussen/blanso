@@ -25,7 +25,7 @@ import {
   type InventoryBlock,
   type InventoryBooking,
 } from "../inventory";
-import { isoDate, todayUTC } from "../dates";
+import { isoDate, nightsBetween, todayUTC } from "../dates";
 import { LISTINGS, ROOM_TYPES } from "../listings";
 
 // In-memory DataStore. Demo- och testlagret — samma kontrakt som SupabaseStore.
@@ -372,6 +372,19 @@ export class MemoryStore implements DataStore {
       return { ok: false, error: "ROOM_TYPE_NOT_FOUND" };
     }
     if (!Number.isInteger(input.rooms) || input.rooms < 1) return { ok: false, error: "INVALID_ROOMS" };
+    // Försvar på djupet (samma vakt som SQL): kontraktet litar inte på anroparens
+    // datum, nätter eller belopp.
+    const amounts = [input.subtotalCents, input.cleaningFeeCents, input.serviceFeeCents, input.totalCents];
+    if (
+      input.checkOut <= input.checkIn ||
+      input.checkIn < isoDate(todayUTC()) ||
+      !Number.isInteger(input.guests) ||
+      input.guests < 1 ||
+      input.nights !== nightsBetween(input.checkIn, input.checkOut) ||
+      amounts.some((c) => !Number.isInteger(c) || c < 0)
+    ) {
+      return { ok: false, error: "INVALID_REQUEST" };
+    }
     // Vakten bor i kontraktet, inte bara hos anroparen.
     if (input.guests > rt.maxGuests * input.rooms) return { ok: false, error: "TOO_MANY_GUESTS" };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { deleteRoomTypeAction, saveRoomType, type RoomTypeState } from "@/app/actions";
 import type { RoomType } from "@/lib/domain";
 
@@ -57,14 +57,27 @@ export function RoomTypeForm({ listingId, roomType }: { listingId: string; roomT
   );
 }
 
+// Två steg: ett felklick får aldrig ta bort en rumstyp från gästsidan.
 export function DeleteRoomTypeButton({ listingId, roomTypeId, name }: { listingId: string; roomTypeId: string; name: string }) {
   const [state, formAction, pending] = useActionState(deleteRoomTypeAction, initial);
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <button type="button" onClick={() => setConfirming(true)} className="b-btn" style={{ padding: "10px 16px" }} aria-label={`Remove ${name}`}>
+        Remove
+      </button>
+    );
+  }
   return (
-    <form action={formAction} style={{ display: "inline" }}>
+    <form action={formAction} style={{ display: "inline-flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
       <input type="hidden" name="listingId" value={listingId} />
       <input type="hidden" name="roomTypeId" value={roomTypeId} />
-      <button type="submit" disabled={pending} className="b-btn" style={{ padding: "10px 16px" }} aria-label={`Remove ${name}`}>
-        {pending ? "Removing…" : "Remove"}
+      <span style={{ fontSize: 14, color: "var(--ink-2)" }}>Remove {name}? Guests can no longer book it.</span>
+      <button type="submit" disabled={pending} className="b-btn b-btn-solid" style={{ padding: "10px 16px" }}>
+        {pending ? "Removing…" : "Yes, remove"}
+      </button>
+      <button type="button" disabled={pending} onClick={() => setConfirming(false)} className="b-btn" style={{ padding: "10px 16px" }}>
+        Cancel
       </button>
       {state.status === "error" && (
         <p role="alert" className="b-form-error" style={{ marginTop: 10 }}>{state.error}</p>

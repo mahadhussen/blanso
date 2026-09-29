@@ -43,8 +43,9 @@ export default async function CheckoutPage({
   if (!roomType || roomType.listingId !== property.id || roomType.archivedAt !== null) {
     return <Problem message="That room is no longer offered. Choose another room." href={back} />;
   }
-  if (!Number.isInteger(rooms) || rooms < 1) {
-    return <Problem message="Choose at least one room." href={back} />;
+  // Samma gräns som bokningsvalideringen (validation.ts: 1–50 rum).
+  if (!Number.isInteger(rooms) || rooms < 1 || rooms > 50) {
+    return <Problem message="Choose between 1 and 50 rooms." href={back} />;
   }
 
   const stay = validateStay(checkIn, checkOut);

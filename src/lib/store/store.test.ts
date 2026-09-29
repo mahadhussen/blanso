@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { MemoryStore, __resetMemoryStore, DEMO_HOST_ID } from "./memory";
 import type { NewBooking, NewRoomType } from "../domain";
 import { LISTINGS, ROOM_TYPES, defaultRoomTypeId } from "../listings";
+import { nightsBetween } from "../dates";
 
 // Facittester för DataStore-KONTRAKTET. Körs mot MemoryStore; samma regler
 // bevisas mot SQL-funktionen i scripts/verify-room-types.sql.
@@ -29,7 +30,7 @@ function bookingInput(
     checkIn,
     checkOut,
     guests: 2,
-    nights: 3,
+    nights: nightsBetween(checkIn, checkOut),
     subtotalCents: 30000,
     cleaningFeeCents: 2000,
     serviceFeeCents: 3600,
@@ -236,6 +237,22 @@ describe("DataStore: bokningar per rumstyp", () => {
     expect(await store.cancelBooking(id, DEMO_HOST_ID)).toBe(true);
     const r2 = await store.createBooking(bookingInput(NAIROBI, PENTHOUSE, "2027-03-10", "2027-03-13"));
     expect(r2.ok).toBe(true);
+  });
+
+  it("kontraktet litar inte på anroparens datum, nätter, gäster eller belopp", async () => {
+    const ok = bookingInput(NAIROBI, DELUXE, "2027-05-01", "2027-05-03");
+    const bad = [
+      { ...ok, checkOut: ok.checkIn }, // noll nätter
+      { ...bookingInput(NAIROBI, DELUXE, "2027-05-03", "2027-05-01") }, // fel ordning
+      { ...bookingInput(NAIROBI, DELUXE, "2020-01-01", "2020-01-03") }, // förflutet
+      { ...ok, guests: 0 },
+      { ...ok, nights: 99 },
+      { ...ok, totalCents: -1 },
+    ];
+    for (const input of bad) {
+      expect(await store.createBooking(input)).toEqual({ ok: false, error: "INVALID_REQUEST" });
+    }
+    expect((await store.createBooking(ok)).ok).toBe(true);
   });
 
   it("gäster > rumstypens maxGuests × rooms avvisas av kontraktet självt", async () => {

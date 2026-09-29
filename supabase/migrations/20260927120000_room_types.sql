@@ -150,11 +150,18 @@ begin
   if p_rooms is null or p_rooms < 1 then
     return jsonb_build_object('ok', false, 'error', 'INVALID_ROOMS');
   end if;
+  -- Försvar på djupet (samma vakt som MemoryStore): lita inte på anroparens
+  -- datum, nätter eller belopp.
+  if p_check_in is null or p_check_out is null or p_check_out <= p_check_in
+     or p_check_in < current_date
+     or p_guests is null or p_guests < 1
+     or p_nights is distinct from (p_check_out - p_check_in)
+     or p_subtotal_cents < 0 or p_cleaning_fee_cents < 0
+     or p_service_fee_cents < 0 or p_total_cents < 0 then
+    return jsonb_build_object('ok', false, 'error', 'INVALID_REQUEST');
+  end if;
   if p_guests > rt.max_guests * p_rooms then
     return jsonb_build_object('ok', false, 'error', 'TOO_MANY_GUESTS');
-  end if;
-  if p_check_out <= p_check_in then
-    return jsonb_build_object('ok', false, 'error', 'UNAVAILABLE');
   end if;
 
   -- Stängd natt (hela boendet eller just typen) ⇒ UNAVAILABLE.

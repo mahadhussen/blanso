@@ -19,6 +19,7 @@ export type CreateBookingError =
   | "NOT_ENOUGH_ROOMS" // färre lediga rum än begärt någon natt; se `available`
   | "ROOM_TYPE_NOT_FOUND" // saknas, tillhör annat boende eller är borttagen
   | "INVALID_ROOMS" // rooms < 1 eller inte heltal
+  | "INVALID_REQUEST" // datum i fel ordning/förflutet, guests < 1, nätter eller belopp som inte stämmer
   | "LISTING_NOT_FOUND"
   | "LISTING_NOT_PUBLISHED"
   | "TOO_MANY_GUESTS"; // guests > rumstypens maxGuests × rooms
