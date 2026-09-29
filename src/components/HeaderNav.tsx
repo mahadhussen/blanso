@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-// Navigeringen. Desktop: samma rad som 1:1-kopian. Mobil (<760px, styrt i
+// Navigeringen. Desktop: samma rad som 1:1-kopian. Mobil och iPad stående (≤900px, styrt i
 // globals.css): en hamburgare som fäller ut länkarna under headern.
 const LINKS: { href: string; label: string }[] = [
   { href: "/s", label: "Stays" },

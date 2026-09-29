@@ -63,7 +63,7 @@ export default async function PropertyPage({
               <Link href="/s" style={{ color: "var(--muted)" }}>Stays</Link>
               &nbsp;/&nbsp; {property.city}, {property.country}
             </div>
-            <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "var(--text-h1)", lineHeight: 1, letterSpacing: "var(--ls-display)", textTransform: "uppercase", margin: "var(--s-3) 0 0" }}>
+            <h1 className="b-stay-h1" style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "var(--text-h1)", lineHeight: 1, letterSpacing: "var(--ls-display)", textTransform: "uppercase", margin: "var(--s-3) 0 0" }}>
               {property.title}
             </h1>
             <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: "var(--s-2)" }}>

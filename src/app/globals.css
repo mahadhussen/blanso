@@ -237,9 +237,10 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
   }
 }
 
-/* Toppmenyn: rad på desktop, hamburgare + fällbar panel på mobil. */
+/* Toppmenyn: rad på desktop, hamburgare + fällbar panel på mobil och iPad
+   stående. Raden behöver ~840 px; under 900 flödade den över (Naadir 2026-09-29). */
 .b-nav-toggle { display: none; }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .b-site-header { padding-left: 20px !important; padding-right: 20px !important; }
   .b-wordmark { font-size: 22px !important; letter-spacing: 4px !important; }
   .b-nav-desktop { display: none !important; }
@@ -292,6 +293,9 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
 .b-room-row-x > .b-room-price { grid-area: price; }
 .b-room-row-x > .b-room-qty { grid-area: qty; }
 .b-room-qty .b-select { width: 100%; min-width: 0; }
+/* Boendets namn: långa ord ("NYARUTARAMA") ska aldrig ge sidscroll på mobil. */
+.b-stay-h1 { overflow-wrap: anywhere; }
+@media (max-width: 760px) { .b-stay-h1 { font-size: clamp(28px, 10vw, var(--text-h1)) !important; } }
 .b-co-stay { display: grid; grid-template-columns: 1fr 1fr 1fr; }
 .b-room-head { display: grid; align-items: end; padding: 14px 0; border-bottom: 1px solid var(--hairline); }
 .b-room-price, .b-room-qty { text-align: right; }
