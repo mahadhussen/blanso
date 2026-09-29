@@ -276,8 +276,23 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
 
 /* ---- Rumstyper: gästens rumstabell (facitets .b-room-row + kolumner) ------- */
 .b-room-row { display: grid; grid-template-columns: 160px minmax(0, 1fr) auto; gap: 28px; align-items: center; }
+/* Två våningar som booking.com: namnet får hela radens bredd överst, under det
+   spec | gäster | pris | antal i rubrikernas kolumner. Utan det klämdes namnet
+   till 66 px i den 652 px breda vänsterspalten (Naadir 2026-09-29). */
 .b-room-head,
-.b-room-row-x { grid-template-columns: 140px minmax(0, 1fr) 84px 150px 132px; gap: 20px; }
+.b-room-row-x { grid-template-columns: 112px minmax(0, 1fr) 72px 120px 124px; gap: 8px 16px; }
+.b-room-row-x {
+  grid-template-areas: "img name name name name" "img info sleeps price qty";
+  align-items: start;
+}
+.b-room-row-x > .b-room-img { grid-area: img; }
+.b-room-row-x > .b-room-name { grid-area: name; min-width: 0; }
+.b-room-row-x > .b-room-info { grid-area: info; min-width: 0; }
+.b-room-row-x > .b-room-sleeps { grid-area: sleeps; }
+.b-room-row-x > .b-room-price { grid-area: price; }
+.b-room-row-x > .b-room-qty { grid-area: qty; }
+.b-room-qty .b-select { width: 100%; min-width: 0; }
+.b-co-stay { display: grid; grid-template-columns: 1fr 1fr 1fr; }
 .b-room-head { display: grid; align-items: end; padding: 14px 0; border-bottom: 1px solid var(--hairline); }
 .b-room-price, .b-room-qty { text-align: right; }
 .b-room-mlabel { display: none; }
@@ -301,15 +316,16 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
   .b-room-head { display: none; }
   .b-room-row-x {
     grid-template-columns: 96px minmax(0, 1fr);
-    grid-template-areas: "img info" "sleeps sleeps" "price qty";
-    gap: 12px 16px; align-items: start;
+    grid-template-areas: "img name" "img info" "sleeps sleeps" "price qty";
+    gap: 8px 16px; align-items: start;
   }
   .b-room-row-x > .b-room-img { grid-area: img; width: 96px !important; height: 80px !important; }
-  .b-room-row-x > div:nth-child(2) { grid-area: info; }
   .b-room-row-x > .b-room-sleeps { grid-area: sleeps; }
   .b-room-row-x > .b-room-price { grid-area: price; text-align: left; align-self: center; }
   .b-room-row-x > .b-room-qty { grid-area: qty; align-self: center; }
   .b-room-mlabel { display: inline; }
+  .b-co-stay { grid-template-columns: 1fr 1fr; }
+  .b-co-stay > .b-co-room { grid-column: 1 / -1; border-top: 1px solid var(--hairline); }
   .b-datebar { grid-template-columns: 1fr 1fr; }
   .b-datebar > label:nth-child(2) { border-right: none; }
   .b-datebar > label { border-bottom: 1px solid var(--hairline); }

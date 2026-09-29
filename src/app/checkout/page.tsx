@@ -169,7 +169,7 @@ function Problem({ message, href }: { message: string; href?: string }) {
     <div style={{ maxWidth: 640, margin: "0 auto", padding: "96px var(--page-pad)", textAlign: "center" }}>
       <p style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)" }}>{message}</p>
       <Link href={href ?? "/s"} className="b-btn" style={{ marginTop: 32, display: "inline-block" }}>
-        Back to search
+        {href ? "Back to the rooms" : "Back to search"}
       </Link>
     </div>
   );

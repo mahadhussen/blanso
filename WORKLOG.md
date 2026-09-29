@@ -1,5 +1,57 @@
 # WORKLOG — Blanso
 
+## 2026-09-27–29 — Rumstyper: booking.com-modellen (gren `feature/rumstyper`)
+Rumstyp × antal rum × natt (QloApps / booking.com-extranätet). EN lagermotor
+(`src/lib/inventory.ts`), rumstyp-CRUD med ägarkontroll i DataStore (memory +
+Supabase), atomisk `create_booking` med radlås på rumstypen, rumstabell på
+boendesidan, värdkalender 14 dagar, stängning per rumstyp, beläggning i natt.
+Migration `20260927120000_room_types.sql`: additiv, idempotent, backfill
+`rt-<boende>`, 15-arg-delegat så gammal kod fungerar under utrullningen.
+
+### Bevis
+- Grindar: tsc, eslint, vitest 69/69, next build.
+- `scripts/verify-room-types.sh` mot lokal engångs-Postgres: idempotens, backfill,
+  facit, kapplöpningar 20/3⇒3, 10×2/3⇒1, 25/1⇒1; nya INVALID_REQUEST-vakter.
+- E2E i webbläsare (memory-store): 2 × Sea View Suite $785,20 → "Only 1 left" →
+  URL-försök att boka 2 till nekas → värdkalender 1/3 12–14 okt, 3/3 15 okt.
+  375 px utan sidscroll. Rumsraden omgjord till två våningar efter Naadirs
+  mätning (namnet var 66 px brett på skrivbord).
+
+### Beslut (tvetydigheter som avgjorts — alternativ inom parentes)
+1. **Städavgift per rum**, inte per bokning (`pricing.ts`): varje rum städas, och
+   en bokning av 3 rum ska inte kosta lika mycket att städa som 1. (Alt: per
+   bokning, som den gamla en-enhetsmodellen.) Mahad kan vända det — en rad i
+   `computePricing` + facittest.
+2. **"Instant confirmation" i stället för "Free cancellation"** på landning, sök
+   och rumstabell: gäst-avbokning finns inte, så det gamla löftet var falskt.
+   Bokningar bekräftas direkt, det är sant. (Alt: bygga gäst-avbokning först.)
+3. **Rumskatalogen är demodata** (`src/lib/listings.ts`, `roomSeeds`): storlekar,
+   antal rum och priser är trovärdiga påhitt utan extern källa, satta så att
+   billigaste typ = boendets tidigare listpris. Byts mot värdarnas riktiga
+   uppgifter när riktiga hotell ansluter.
+4. **En rumstyp per bokning** (flera rum av den). Flera typer i samma bokning
+   är nästa steg.
+5. **`tsconfig.json` orörd**: BOB undantog `verify-supabase.mts` från tsc i stället
+   för att uppdatera det (Naadir NOT CLEAN #2). Skriptet är nu omskrivet mot
+   rumstypskontraktet och undantaget borttaget.
+6. **SQL och MemoryStore litar inte på anroparen**: datum i fel ordning/förflutet,
+   guests < 1, nätter som inte stämmer, negativa belopp ⇒ `INVALID_REQUEST`.
+
+### Granskning
+Heisenberg: CLEAN för koden (inga BLOCK); EFTER-punkter kvar: TOCTOU när värden
+sänker units samtidigt som en gäst bokar (#4), delegaten kan återuppväcka
+arkiverat lager (#5, droppas i uppföljande migration), N+1 i värdpanelen (#10),
+guests < rooms tillåts (#11). Naadir R1: NOT CLEAN — skrivbordsbredd, tystat
+verifieringsskript, orörd WORKLOG — alla tre åtgärdade, omprövning pågår.
+
+### Produktion (Mahad godkände migration + deploy 2026-09-29)
+Blockerat: Vercel-hemligheterna är "Secret" och kan inte läsas ut, så en ny
+Supabase access token (eller db-anslutningssträng) behövs från Mahad för DDL.
+Ordning enligt DEPLOY.md.
+
+NEEDS-DECISION (Mahad): betyg och "61 reviews" är seedvärden utan riktiga
+recensioner bakom — säg det muntligt till investeraren eller märk dem.
+
 ## 2026-09-01 — Supabase + designfacit (skiva 3)
 Balaanso (Supabase EU) inkopplad bakom DataStore: schema + atomisk create_booking
 i SQL, RLS deny-all, 17/17 kontraktschecks mot riktiga db (20 samtidiga → 1 vinnare).

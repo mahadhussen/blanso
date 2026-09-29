@@ -215,12 +215,14 @@ export function RoomBooking(p: RoomBookingProps) {
                 const max = Math.min(o.available ?? 0, 30);
                 return (
                   <div role="row" key={o.id} className="b-room-row b-room-row-x" data-room={o.name} style={{ padding: "28px 0", borderBottom: "1px solid var(--hairline)", opacity: soldOut ? 0.62 : 1 }}>
-                    <span className="b-media b-room-img" style={{ width: 140, height: 104, position: "relative" }}>
-                      {o.image && <Image src={o.image} alt={o.name} fill sizes="140px" />}
+                    <span className="b-media b-room-img" style={{ width: 112, height: 96, position: "relative" }}>
+                      {o.image && <Image src={o.image} alt={o.name} fill sizes="112px" />}
                     </span>
-                    <div role="cell" style={{ minWidth: 0 }}>
-                      <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", lineHeight: 1.15 }}>{o.name}</div>
-                      <div className="b-label" style={{ fontSize: 11, letterSpacing: 1.5, fontWeight: 600, marginTop: "var(--s-1)" }}>{specLine(o)}</div>
+                    <div role="cell" className="b-room-name" style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", lineHeight: 1.15 }}>
+                      {o.name}
+                    </div>
+                    <div role="cell" className="b-room-info">
+                      <div className="b-label" style={{ fontSize: 11, letterSpacing: 1.5, fontWeight: 600 }}>{specLine(o)}</div>
                       <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: "var(--s-1)" }}>Instant confirmation</div>
                       {scarce && (
                         <div className="b-label b-label-ink" style={{ marginTop: "var(--s-1)", letterSpacing: 1.5 }} data-testid="scarcity">
@@ -247,7 +249,7 @@ export function RoomBooking(p: RoomBookingProps) {
                         <span className="b-label b-label-ink">{o.closed ? "Closed" : "Sold out"}</span>
                       ) : (
                         <select
-                          aria-label={`Number of ${o.name} rooms`}
+                          aria-label={`Rooms to book: ${o.name}`}
                           value={qty}
                           onChange={(e) => choose(o, Number(e.target.value))}
                           className="b-select"

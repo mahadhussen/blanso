@@ -82,7 +82,7 @@ export function CheckoutForm({
       <div>
         <div className="b-label b-label-ink">1 · Your stay</div>
         <div style={{ marginTop: "var(--s-3)", border: "1px solid var(--hairline)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr" }}>
+          <div className="b-co-stay">
             <div style={{ padding: "var(--s-3) var(--s-4)", borderRight: "1px solid var(--hairline)" }}>
               <div className="b-label" style={label9}>Check-in</div>
               <div style={{ fontSize: "var(--text-body)", marginTop: 4 }}>{checkIn}</div>
@@ -91,7 +91,7 @@ export function CheckoutForm({
               <div className="b-label" style={label9}>Check-out</div>
               <div style={{ fontSize: "var(--text-body)", marginTop: 4 }}>{checkOut}</div>
             </div>
-            <div style={{ padding: "var(--s-3) var(--s-4)" }}>
+            <div className="b-co-room" style={{ padding: "var(--s-3) var(--s-4)" }}>
               <div className="b-label" style={label9}>Room</div>
               <div style={{ fontSize: "var(--text-body)", marginTop: 4 }}>
                 {roomLabel} · {guests} {guests === 1 ? "guest" : "guests"}
