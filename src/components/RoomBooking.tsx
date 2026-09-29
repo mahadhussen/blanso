@@ -221,7 +221,7 @@ export function RoomBooking(p: RoomBookingProps) {
                     <div role="cell" style={{ minWidth: 0 }}>
                       <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-h3)", lineHeight: 1.15 }}>{o.name}</div>
                       <div className="b-label" style={{ fontSize: 11, letterSpacing: 1.5, fontWeight: 600, marginTop: "var(--s-1)" }}>{specLine(o)}</div>
-                      <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: "var(--s-1)" }}>Free cancellation</div>
+                      <div style={{ fontSize: "var(--text-body)", color: "var(--ink-2)", marginTop: "var(--s-1)" }}>Instant confirmation</div>
                       {scarce && (
                         <div className="b-label b-label-ink" style={{ marginTop: "var(--s-1)", letterSpacing: 1.5 }} data-testid="scarcity">
                           {o.closed ? "Not available on these dates" : scarce}

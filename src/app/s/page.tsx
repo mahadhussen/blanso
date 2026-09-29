@@ -40,7 +40,7 @@ function specLine(p: PropertyView): string {
   return bits.join(" · ");
 }
 function noteLine(p: PropertyView): string {
-  const bits = ["Free cancellation"];
+  const bits = ["Instant confirmation"];
   if (p.amenities.includes("Breakfast included")) bits.push("Breakfast included");
   return bits.join(" · ");
 }
