@@ -258,7 +258,7 @@ a:hover .b-media img, .b-media:hover img { transform: scale(1.04); }
   .b-nav-mobile a { padding: 15px 2px; border-bottom: 1px solid var(--hairline); }
   .b-nav-mobile a:last-child { border-bottom: none; }
 }
-@media (min-width: 761px) { .b-nav-mobile { display: none; } }
+@media (min-width: 901px) { .b-nav-mobile { display: none; } }
 
 /* Hjältesökfält, boendekort och värdsektion: fasta desktop-kolumner, staplar på mobil. */
 .b-hero-search { grid-template-columns: 1.3fr 1fr 1fr 1fr auto; }
