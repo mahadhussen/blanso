@@ -8,6 +8,15 @@ Live: **https://blanso-orbit10.vercel.app** — kör mot Supabase-projektet
 - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — databasen. Utan dem kastar
   produktionsvakten i `src/lib/store/index.ts` (tyst RAM-demo kräver `BLANSO_DEMO=1`).
 - `BLANSO_HOST_PASSCODE` (valfri) — värdpanelens kod, standard `blanso`. **Sätt egen.**
+- `CRON_SECRET` (rekommenderad) — skyddar `/api/keepalive`; Vercel skickar den
+  automatiskt till cron-anropet. Utan den är routen en öppen läsning av ett antal.
+
+## Keepalive
+`vercel.json` kör `/api/keepalive` dagligen 06:00 UTC (gratis Vercel Cron). Den gör
+en läsning så Supabase-gratisprojektet inte pausas efter 7 dagars inaktivitet
+(hände 2026-09-29: värdnamnet slutade resolva, `/s` och boendesidor gav 500).
+Ett redan pausat projekt väcks INTE av den — "Restore project" i Supabase.
+Kontrollera körningarna under Vercel → Logs (200 `{"ok":true,"published":N}`).
 
 ## Databas
 Schema: `supabase/migrations/` (körs via `~/.claude/skills/db-migrate` eller

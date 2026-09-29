@@ -42,12 +42,23 @@ Heisenberg: CLEAN för koden (inga BLOCK); EFTER-punkter kvar: TOCTOU när värd
 sänker units samtidigt som en gäst bokar (#4), delegaten kan återuppväcka
 arkiverat lager (#5, droppas i uppföljande migration), N+1 i värdpanelen (#10),
 guests < rooms tillåts (#11). Naadir R1: NOT CLEAN — skrivbordsbredd, tystat
-verifieringsskript, orörd WORKLOG — alla tre åtgärdade, omprövning pågår.
+verifieringsskript, orörd WORKLOG — alla tre åtgärdade. R2: **CLEAN** @ bda91a7
++ två förbefintliga fynd från main (toppmenyn flödade över 761–840 px, långa
+boendenamn gav sidscroll vid 375). R3: NOT CLEAN på min menyfix (panelen dold
+761–900 av en kvarglömd min-width: 761px) → rättad och klickmätt. R4: **CLEAN**
+@ 5b828e2 inklusive keepalive.
+
+### Keepalive (beslut 2026-09-29)
+Balaanso pausades av Supabase (gratis, 7 dagar utan trafik): värdnamnet slutade
+resolva och `/s` + boendesidor gav 500 live. `/api/keepalive` + Vercel Cron
+dagligen 06:00 UTC gör en läsning. (Alt: Supabase Pro, $25/mån, pausar aldrig.)
+Väcker inte ett redan pausat projekt — Mahad måste "Restore project".
 
 ### Produktion (Mahad godkände migration + deploy 2026-09-29)
-Blockerat: Vercel-hemligheterna är "Secret" och kan inte läsas ut, så en ny
-Supabase access token (eller db-anslutningssträng) behövs från Mahad för DDL.
-Ordning enligt DEPLOY.md.
+Blockerat av två saker bara Mahad kan göra: (1) återställa det pausade
+Balaanso-projektet, (2) ge en ny Supabase access token för DDL (Vercel-
+hemligheterna är "Secret" och kan inte läsas ut). Ordning enligt DEPLOY.md,
+steg 0 = projektet svarar igen och `/s` ger 200 live.
 
 NEEDS-DECISION (Mahad): betyg och "61 reviews" är seedvärden utan riktiga
 recensioner bakom — säg det muntligt till investeraren eller märk dem.
